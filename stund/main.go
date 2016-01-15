@@ -39,13 +39,15 @@ func main() {
 
 func acceptUDP(listener *net.UDPConn) {
 	for {
-		buff := make([]byte, 1024)
-		n, addr, err := listener.ReadFromUDP(buff)
+		buf := make([]byte, 1024)
+		n, addr, err := listener.ReadFromUDP(buf)
 		if err != nil {
 			log.Error("ReadFromUdp(\"%v\") error(%v) nbytes(%d)", addr, err, n)
 		}
 		if n > 0 {
-			fmt.Printf("read %s", string(buff))
+			fmt.Printf("read %d, %s", n, string(buf))
+			request := new(bindingRequest)
+			request.Decode(buf[:n])
 		}
 
 	}
