@@ -6,41 +6,45 @@ import (
 	"time"
 )
 
+//GetRPCMethods get rpc methods
 type GetRPCMethods struct {
-	Id     string
+	ID     string
 	Name   string
 	NoMore int
 }
 
-type GetRPCMethodsBodyStruct struct {
-	Body GetRPCMethodsStruct `xml:"cwmp:GetRPCMethods"`
+type getRPCMethodsBodyStruct struct {
+	Body getRPCMethodsStruct `xml:"cwmp:GetRPCMethods"`
 }
 
-type GetRPCMethodsStruct struct {
+type getRPCMethodsStruct struct {
 }
 
-func (msg *GetRPCMethods) GetId() string {
-	if len(msg.Id) < 1 {
-		msg.Id = fmt.Sprintf("ID:intrnl.unset.id.%s%d.%d", msg.GetName(), time.Now().Unix(), time.Now().UnixNano())
+//GetID get msg id
+func (msg *GetRPCMethods) GetID() string {
+	if len(msg.ID) < 1 {
+		msg.ID = fmt.Sprintf("ID:intrnl.unset.id.%s%d.%d", msg.GetName(), time.Now().Unix(), time.Now().UnixNano())
 	}
-	return msg.Id
+	return msg.ID
 }
 
+//GetName get type name
 func (msg *GetRPCMethods) GetName() string {
 	return "GetRPCMethods"
 }
 
-func (msg *GetRPCMethods) CreateXml() []byte {
+//CreateXML encode into xml
+func (msg *GetRPCMethods) CreateXML() []byte {
 	env := Envelope{}
 	env.XmlnsEnv = "http://schemas.xmlsoap.org/soap/envelope/"
 	env.XmlnsEnc = "http://schemas.xmlsoap.org/soap/encoding/"
 	env.XmlnsXsd = "http://www.w3.org/2001/XMLSchema"
 	env.XmlnsXsi = "http://www.w3.org/2001/XMLSchema-instance"
 	env.XmlnsCwmp = "urn:dslforum-org:cwmp-1-0"
-	id := IdStruct{Attr: "1", Value: msg.GetId()}
+	id := IDStruct{Attr: "1", Value: msg.GetID()}
 	env.Header = HeaderStruct{ID: id, NoMore: msg.NoMore}
-	respBody := GetRPCMethodsStruct{}
-	env.Body = GetRPCMethodsBodyStruct{respBody}
+	respBody := getRPCMethodsStruct{}
+	env.Body = getRPCMethodsBodyStruct{respBody}
 	//output, err := xml.Marshal(env)
 	output, err := xml.MarshalIndent(env, "  ", "    ")
 	if err != nil {
@@ -49,6 +53,7 @@ func (msg *GetRPCMethods) CreateXml() []byte {
 	return output
 }
 
+//Parse decode from xml
 func (msg *GetRPCMethods) Parse(xmlstr string) {
-
+	//TODO
 }

@@ -1,27 +1,32 @@
 package messages
 
+//OnlineInform online client
 type OnlineInform struct {
 	Sn    string `json:"sn"`
-	Hosts []Host
+	Hosts []host
 }
 
-type Host struct {
+type host struct {
 	Mac      string `json:"mac"`
 	HostName string `json:"hostname"`
 }
 
+//GetName get msg type
 func (msg *OnlineInform) GetName() string {
 	return "OnlineInform"
 }
 
-func (msg *OnlineInform) GetId() string {
+//GetID get msg id
+func (msg *OnlineInform) GetID() string {
 	return "OnlineInform"
 }
 
-func (msg *OnlineInform) CreateXml() (xml []byte) {
+//CreateXML encode into xml
+func (msg *OnlineInform) CreateXML() (xml []byte) {
 	return xml
 }
 
+//Parse parse from xml
 func (msg *OnlineInform) Parse(xmlstr string) {
-
+	//TODO
 }

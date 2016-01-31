@@ -5,6 +5,7 @@ import (
 	"github.com/astaxie/beego/logs"
 )
 
+//Logger object
 var Logger = logs.NewLogger(10000)
 
 func init() {
@@ -25,4 +26,19 @@ func init() {
 	}
 	Logger.SetLevel(logs.LevelInfo)
 	Logger.SetLogger("file", `{"filename":"`+logfile+`","daily":true}`)
+}
+
+//Info call beego log info
+func Info(format string, v ...interface{}) {
+	Logger.Info(format, v)
+}
+
+//Debug call beego
+func Debug(format string, v ...interface{}) {
+	Logger.Debug(format, v)
+}
+
+//Error call beego
+func Error(format string, v ...interface{}) {
+	Logger.Error(format, v)
 }

@@ -8,41 +8,46 @@ import (
 	"time"
 )
 
+//GetParameterValuesResponse getParameterValues response
 type GetParameterValuesResponse struct {
-	Id     string
+	ID     string
 	Name   string
 	Values map[string]string
 }
 
+//NewGetParameterValuesResponse create GetParameterValuesResponse object
 func NewGetParameterValuesResponse() (m *GetParameterValuesResponse) {
 	m = &GetParameterValuesResponse{}
-	m.Id = m.GetId()
+	m.ID = m.GetID()
 	m.Name = m.GetName()
 	return m
 }
 
-type GetParameterValuesResponseBodyStruct struct {
-	Body GetParameterValuesResponseStruct `xml:"cwmp:GetParameterValuesResponse"`
+type getParameterValuesResponseBodyStruct struct {
+	Body getParameterValuesResponseStruct `xml:"cwmp:GetParameterValuesResponse"`
 }
 
-type GetParameterValuesResponseStruct struct {
+type getParameterValuesResponseStruct struct {
 	Params ParameterListStruct `xml:"ParameterList"`
 }
 
+//GetName get type name
 func (msg *GetParameterValuesResponse) GetName() string {
 	return "GetParameterValuesResponse"
 }
 
-func (msg *GetParameterValuesResponse) GetId() string {
-	if len(msg.Id) < 1 {
-		msg.Id = fmt.Sprintf("ID:intrnl.unset.id.%s%d.%d", msg.GetName(), time.Now().Unix(), time.Now().UnixNano())
+//GetID get msg id
+func (msg *GetParameterValuesResponse) GetID() string {
+	if len(msg.ID) < 1 {
+		msg.ID = fmt.Sprintf("ID:intrnl.unset.id.%s%d.%d", msg.GetName(), time.Now().Unix(), time.Now().UnixNano())
 	}
-	return msg.Id
+	return msg.ID
 }
 
-func (msg *GetParameterValuesResponse) CreateXml() []byte {
+//CreateXML encode into xml
+func (msg *GetParameterValuesResponse) CreateXML() []byte {
 	env := Envelope{}
-	id := IdStruct{"1", msg.GetId()}
+	id := IDStruct{"1", msg.GetID()}
 	env.XmlnsEnv = "http://schemas.xmlsoap.org/soap/envelope/"
 	env.XmlnsEnc = "http://schemas.xmlsoap.org/soap/encoding/"
 	env.XmlnsXsd = "http://www.w3.org/2001/XMLSchema"
@@ -54,12 +59,12 @@ func (msg *GetParameterValuesResponse) CreateXml() []byte {
 	params := ParameterListStruct{Type: "cwmp:ParameterValueStruct[" + paramLen + "]"}
 	for k, v := range msg.Values {
 		param := ParameterValueStruct{
-			Name:  NodeStruct{Type: XSD_STRING, Value: k},
-			Value: NodeStruct{Type: XSD_STRING, Value: v}}
+			Name:  NodeStruct{Type: XsdString, Value: k},
+			Value: NodeStruct{Type: XsdString, Value: v}}
 		params.Params = append(params.Params, param)
 	}
-	info := GetParameterValuesResponseStruct{Params: params}
-	env.Body = GetParameterValuesResponseBodyStruct{info}
+	info := getParameterValuesResponseStruct{Params: params}
+	env.Body = getParameterValuesResponseBodyStruct{info}
 	output, err := xml.MarshalIndent(env, "  ", "    ")
 	//output, err := xml.Marshal(env)
 	if err != nil {
@@ -68,13 +73,14 @@ func (msg *GetParameterValuesResponse) CreateXml() []byte {
 	return output
 }
 
+//Parse decode from xml
 func (msg *GetParameterValuesResponse) Parse(xmlstr string) {
 	document, _ := dom.ParseString(xmlstr)
 	root := document.DocumentElement()
 	hdr := root.GetElementsByTagName("Header")
 	if hdr.Length() > 0 {
 		pNode := hdr.Item(0)
-		msg.Id = GetChildElementValue(pNode, "ID")
+		msg.ID = GetChildElementValue(pNode, "ID")
 	}
 
 	paramList := root.GetElementsByTagName("ParameterValueStruct")

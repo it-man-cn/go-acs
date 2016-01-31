@@ -1,22 +1,27 @@
 package messages
 
+//ValueChange value change
 type ValueChange struct {
 	Sn    string `json:"sn"`
 	Names []string
 }
 
+//GetName get msg type
 func (msg *ValueChange) GetName() string {
 	return "ValueChange"
 }
 
-func (msg *ValueChange) GetId() string {
+//GetID get msg id
+func (msg *ValueChange) GetID() string {
 	return "ValueChange"
 }
 
-func (msg *ValueChange) CreateXml() (xml []byte) {
+//CreateXML encode into xml
+func (msg *ValueChange) CreateXML() (xml []byte) {
 	return xml
 }
 
+//Parse decode from xml
 func (msg *ValueChange) Parse(xmlstr string) {
-
+	//TODO
 }

@@ -7,13 +7,16 @@ import (
 )
 
 var (
-	Conf  *Config
+	//Conf conf propertis
+	Conf *Config
+	//Debug debug log flag
 	Debug bool
 )
 
+//Config stund config
 type Config struct {
 	PrimaryPort int
-	PrimaryIp   string
+	PrimaryIP   string
 	Log         string
 	Bind        string
 	MaxProc     int
@@ -26,10 +29,10 @@ func init() {
 		panic(err)
 	}
 	Conf.PrimaryPort, _ = iniconf.Int("primary.port")
-	Conf.PrimaryIp = iniconf.String("primary.ip")
+	Conf.PrimaryIP = iniconf.String("primary.ip")
 	Conf.Log = iniconf.String("log")
 	fmt.Println("config log " + Conf.Log)
 	Debug, _ = iniconf.Bool("debug")
-	Conf.Bind = Conf.PrimaryIp + ":" + strconv.Itoa(Conf.PrimaryPort)
+	Conf.Bind = Conf.PrimaryIP + ":" + strconv.Itoa(Conf.PrimaryPort)
 	Conf.MaxProc, _ = iniconf.Int("maxproc")
 }

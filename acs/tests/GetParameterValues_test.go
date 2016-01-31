@@ -8,7 +8,7 @@ import (
 
 func TestCreateGetParameterValues(t *testing.T) {
 	resp := new(messages.GetParameterValues)
-	names := make([]string, 0)
+    var names []string
 	names = append(names, "InternetGatewayDevice.DeviceInfo.Manufacturer", "InternetGatewayDevice.DeviceInfo.ProvisioningCode")
 	resp.ParamNames = names
 	fmt.Println(string(resp.CreateXml()))

@@ -8,40 +8,44 @@ import (
 	"time"
 )
 
+//GetRPCMethodsResponse getRPCMethods reponse
 type GetRPCMethodsResponse struct {
-	Id      string
+	ID      string
 	Name    string
 	Methods []string
 }
 
-type GetRPCMethodsResponseBodyStruct struct {
-	Body GetRPCMethodsResponseStruct `xml:"cwmp:GetRPCMethodsResponse"`
+type getRPCMethodsResponseBodyStruct struct {
+	Body getRPCMethodsResponseStruct `xml:"cwmp:GetRPCMethodsResponse"`
 }
 
-type GetRPCMethodsResponseStruct struct {
-	MethodList MethodListStruct `xml:"cwmp:MethodList"`
+type getRPCMethodsResponseStruct struct {
+	MethodList methodListStruct `xml:"cwmp:MethodList"`
 }
 
-type MethodListStruct struct {
+type methodListStruct struct {
 	Type      string   `xml:"xsi:type,attr"`
 	ArrayType string   `xml:"SOAP-ENC:arrayType,attr"`
 	Methods   []string `xml:"string"`
 }
 
+//GetName get msg type
 func (msg *GetRPCMethodsResponse) GetName() string {
 	return "GetRPCMethodsResponse"
 }
 
-func (msg *GetRPCMethodsResponse) GetId() string {
-	if len(msg.Id) < 1 {
-		msg.Id = fmt.Sprintf("ID:intrnl.unset.id.%s%d.%d", msg.GetName(), time.Now().Unix(), time.Now().UnixNano())
+//GetID get msg id
+func (msg *GetRPCMethodsResponse) GetID() string {
+	if len(msg.ID) < 1 {
+		msg.ID = fmt.Sprintf("ID:intrnl.unset.id.%s%d.%d", msg.GetName(), time.Now().Unix(), time.Now().UnixNano())
 	}
-	return msg.Id
+	return msg.ID
 }
 
-func (msg *GetRPCMethodsResponse) CreateXml() []byte {
+//CreateXML encode into xml
+func (msg *GetRPCMethodsResponse) CreateXML() []byte {
 	env := Envelope{}
-	id := IdStruct{"1", msg.GetId()}
+	id := IDStruct{"1", msg.GetID()}
 	env.XmlnsEnv = "http://schemas.xmlsoap.org/soap/envelope/"
 	env.XmlnsEnc = "http://schemas.xmlsoap.org/soap/encoding/"
 	env.XmlnsXsd = "http://www.w3.org/2001/XMLSchema"
@@ -49,15 +53,15 @@ func (msg *GetRPCMethodsResponse) CreateXml() []byte {
 	env.XmlnsCwmp = "urn:dslforum-org:cwmp-1-0"
 	env.Header = HeaderStruct{ID: id}
 	methodsLen := strconv.Itoa(len(msg.Methods))
-	methodList := MethodListStruct{
-		Type:      SOAP_ARRAY,
-		ArrayType: XSD_STRING + "[" + methodsLen + "]",
+	methodList := methodListStruct{
+		Type:      SoapArray,
+		ArrayType: XsdString + "[" + methodsLen + "]",
 	}
 	for _, v := range msg.Methods {
 		methodList.Methods = append(methodList.Methods, v)
 	}
-	body := GetRPCMethodsResponseStruct{methodList}
-	env.Body = GetRPCMethodsResponseBodyStruct{body}
+	body := getRPCMethodsResponseStruct{methodList}
+	env.Body = getRPCMethodsResponseBodyStruct{body}
 	output, err := xml.MarshalIndent(env, "  ", "    ")
 	//output, err := xml.Marshal(env)
 	if err != nil {
@@ -66,18 +70,19 @@ func (msg *GetRPCMethodsResponse) CreateXml() []byte {
 	return output
 }
 
+//Parse decode from xml
 func (msg *GetRPCMethodsResponse) Parse(xmlstr string) {
 	document, _ := dom.ParseString(xmlstr)
 	root := document.DocumentElement()
 	hdr := root.GetElementsByTagName("Header")
 	if hdr.Length() > 0 {
 		pNode := hdr.Item(0)
-		msg.Id = GetChildElementValue(pNode, "ID")
+		msg.ID = GetChildElementValue(pNode, "ID")
 	}
 
 	methodList := root.GetElementsByTagName("MethodList")
 	if methodList.Length() > 0 {
-		methods := make([]string, 0)
+		var methods []string
 		for i := uint(0); i < methodList.Length(); i++ {
 			pi := methodList.Item(i)
 			if pi.NodeType() == dom.ELEMENT_NODE {

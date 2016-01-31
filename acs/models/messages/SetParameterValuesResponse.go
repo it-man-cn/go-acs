@@ -8,47 +8,51 @@ import (
 	"time"
 )
 
+//SetParameterValuesResponse set param reponse
 type SetParameterValuesResponse struct {
-	Id           string
+	ID           string
 	Name         string
 	Status       int
 	ParameterKey string
 }
 
-type SetParameterValuesResponseBodyStruct struct {
-	Body SetParameterValuesResponseStruct `xml:"cwmp:SetParameterValuesResponse"`
+type setParameterValuesResponseBodyStruct struct {
+	Body setParameterValuesResponseStruct `xml:"cwmp:SetParameterValuesResponse"`
 }
 
-type SetParameterValuesResponseStruct struct {
+type setParameterValuesResponseStruct struct {
 	Status       int
 	ParameterKey string
 }
 
-func (msg *SetParameterValuesResponse) GetId() string {
-	if len(msg.Id) < 1 {
-		msg.Id = fmt.Sprintf("ID:intrnl.unset.id.%s%d.%d", msg.GetName(), time.Now().Unix(), time.Now().UnixNano())
+//GetID get msg id
+func (msg *SetParameterValuesResponse) GetID() string {
+	if len(msg.ID) < 1 {
+		msg.ID = fmt.Sprintf("ID:intrnl.unset.id.%s%d.%d", msg.GetName(), time.Now().Unix(), time.Now().UnixNano())
 	}
-	return msg.Id
+	return msg.ID
 }
 
+//GetName get msg type
 func (msg *SetParameterValuesResponse) GetName() string {
 	return "SetParameterValuesResponse"
 }
 
-func (msg *SetParameterValuesResponse) CreateXml() []byte {
+//CreateXML encode into xml
+func (msg *SetParameterValuesResponse) CreateXML() []byte {
 	env := Envelope{}
 	env.XmlnsEnv = "http://schemas.xmlsoap.org/soap/envelope/"
 	env.XmlnsEnc = "http://schemas.xmlsoap.org/soap/encoding/"
 	env.XmlnsXsd = "http://www.w3.org/2001/XMLSchema"
 	env.XmlnsXsi = "http://www.w3.org/2001/XMLSchema-instance"
 	env.XmlnsCwmp = "urn:dslforum-org:cwmp-1-0"
-	id := IdStruct{Attr: "1", Value: msg.GetId()}
+	id := IDStruct{Attr: "1", Value: msg.GetID()}
 	env.Header = HeaderStruct{ID: id}
-	body := SetParameterValuesResponseStruct{
+	body := setParameterValuesResponseStruct{
 		Status:       msg.Status,
 		ParameterKey: msg.ParameterKey,
 	}
-	env.Body = SetParameterValuesResponseBodyStruct{body}
+	env.Body = setParameterValuesResponseBodyStruct{body}
 	//output, err := xml.Marshal(env)
 	output, err := xml.MarshalIndent(env, "  ", "    ")
 	if err != nil {
@@ -57,13 +61,14 @@ func (msg *SetParameterValuesResponse) CreateXml() []byte {
 	return output
 }
 
+//Parse decode from xml
 func (msg *SetParameterValuesResponse) Parse(xmlstr string) {
 	document, _ := dom.ParseString(xmlstr)
 	root := document.DocumentElement()
 	hdr := root.GetElementsByTagName("Header")
 	if hdr.Length() > 0 {
 		pNode := hdr.Item(0)
-		msg.Id = GetChildElementValue(pNode, "ID")
+		msg.ID = GetChildElementValue(pNode, "ID")
 	}
 	status := root.GetElementsByTagName("Status")
 	if status.Length() > 0 {

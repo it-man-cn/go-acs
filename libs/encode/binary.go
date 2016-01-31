@@ -1,5 +1,6 @@
 package encode
 
+//Binary binary parser
 var Binary binary
 
 type binary struct{}

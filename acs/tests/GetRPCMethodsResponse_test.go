@@ -8,7 +8,7 @@ import (
 
 func TestCreateGetRPCMethodsResponse(t *testing.T) {
 	resp := new(messages.GetRPCMethodsResponse)
-	methods := make([]string, 0)
+	var methods []string
 	methods = append(methods, "GetRPCMethods", "GetParameterNames")
 	resp.Methods = methods
 	fmt.Println(string(resp.CreateXml()))

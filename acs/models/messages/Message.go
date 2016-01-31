@@ -5,33 +5,47 @@ import (
 )
 
 const (
-	XSD_STRING      string = "xsd:string"
-	XSD_UNSIGNEDINT string = "xsd:unsignedInt"
+	//XsdString string type
+	XsdString string = "xsd:string"
+	//XsdUnsignedint uint type
+	XsdUnsignedint string = "xsd:unsignedInt"
 )
 
 const (
-	SOAP_ARRAY string = "SOAP-ENC:Array"
+	//SoapArray array type
+	SoapArray string = "SOAP-ENC:Array"
 )
 
 const (
-	EVENT_BOOT_STRAP         string = "0 BOOTSTRAP"
-	EVENT_BOOT               string = "1 BOOT"
-	EVENT_PERIODIC           string = "2 PERIODIC"
-	EVENT_SCHEDULED          string = "3 SCHEDULED"
-	EVENT_VALUE_CHANGE       string = "4 VALUE CHANGE"
-	EVENT_KICKED             string = "5 KICKED"
-	EVENT_CONNECTION_REQUEST string = "6 CONNECTION REQUEST"
-	EVENT_TRANSFER_COMPLETE  string = "7 TRANSFER COMPLETE"
-	EVENT_CLIENT_CHANGE      string = "8 CLIENT CHANGE"
+	//EventBootStrap first connection
+	EventBootStrap string = "0 BOOTSTRAP"
+	//EventBoot reset or power on
+	EventBoot string = "1 BOOT"
+	//EventPeriodic periodic inform
+	EventPeriodic string = "2 PERIODIC"
+	//EventScheduled scheduled infrorm
+	EventScheduled string = "3 SCHEDULED"
+	//EventValueChange value change event
+	EventValueChange string = "4 VALUE CHANGE"
+	//EventKicked acs notify cpe
+	EventKicked string = "5 KICKED"
+	//EventConnectionRequest cpe request connection
+	EventConnectionRequest string = "6 CONNECTION REQUEST"
+	//EventTransferComplete download complete
+	EventTransferComplete string = "7 TRANSFER COMPLETE"
+	//EventClientChange custom event client online/offline
+	EventClientChange string = "8 CLIENT CHANGE"
 )
 
+//Message tr069 msg interface
 type Message interface {
 	Parse(xmlstr string)
-	CreateXml() []byte
+	CreateXML() []byte
 	GetName() string
-	GetId() string
+	GetID() string
 }
 
+//Envelope tr069 body
 type Envelope struct {
 	XMLName   xml.Name    `xml:"SOAP-ENV:Envelope"`
 	XmlnsEnv  string      `xml:"xmlns:SOAP-ENV,attr"`
@@ -43,46 +57,55 @@ type Envelope struct {
 	Body      interface{} `xml:"SOAP-ENV:Body"`
 }
 
+//HeaderStruct tr069 header
 type HeaderStruct struct {
-	ID     IdStruct    `xml:"cwmp:ID"`
+	ID     IDStruct    `xml:"cwmp:ID"`
 	NoMore interface{} `xml:"cwmp:NoMoreRequests,ommitempty"`
 }
 
-type IdStruct struct {
+//IDStruct msg id
+type IDStruct struct {
 	Attr  string `xml:"SOAP-ENV:mustUnderstand,attr,ommitempty"`
 	Value string `xml:",chardata"`
 }
 
+//NodeStruct node
 type NodeStruct struct {
 	Type  interface{} `xml:"xsi:type,attr"`
 	Value string      `xml:",chardata"`
 }
 
+//EventStruct event
 type EventStruct struct {
 	Type   string            `xml:"SOAP-ENC:arrayType,attr"`
 	Events []EventNodeStruct `xml:"EventStruct"`
 }
 
+//EventNodeStruct event node
 type EventNodeStruct struct {
 	EventCode  NodeStruct `xml:"EventCode"`
 	CommandKey string     `xml:"CommandKey"`
 }
 
+//ParameterListStruct param list
 type ParameterListStruct struct {
 	Type   string                 `xml:"SOAP-ENC:arrayType,attr"`
 	Params []ParameterValueStruct `xml:"ParameterValueStruct"`
 }
 
+//ParameterValueStruct param value
 type ParameterValueStruct struct {
 	Name  NodeStruct `xml:"Name"`
 	Value NodeStruct `xml:"Value"`
 }
 
+//FaultStruct error
 type FaultStruct struct {
 	FaultCode   int
 	FaultString string
 }
 
+//ValueStruct value
 type ValueStruct struct {
 	Type  string
 	Value string

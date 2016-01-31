@@ -8,8 +8,9 @@ import (
 	"time"
 )
 
+//TransferComplete download complete
 type TransferComplete struct {
-	Id           string
+	ID           string
 	Name         string
 	CommandKey   string
 	StartTime    string
@@ -18,56 +19,58 @@ type TransferComplete struct {
 	FaultString  string
 }
 
-type TransferCompleteBodyStruct struct {
-	Body TransferCompleteStruct `xml:"cwmp:TransferComplete"`
+type transferCompleteBodyStruct struct {
+	Body transferCompleteStruct `xml:"cwmp:TransferComplete"`
 }
 
-type TransferCompleteStruct struct {
+type transferCompleteStruct struct {
 	CommandKey   string
 	StartTime    string
 	CompleteTime string
 	Fault        interface{} `xml:"FaultStruct,ommitempty"`
 }
 
-func (msg *TransferComplete) GetId() string {
-	if len(msg.Id) < 1 {
-		msg.Id = fmt.Sprintf("ID:intrnl.unset.id.%s%d.%d", msg.GetName(), time.Now().Unix(), time.Now().UnixNano())
+//GetID get msg id
+func (msg *TransferComplete) GetID() string {
+	if len(msg.ID) < 1 {
+		msg.ID = fmt.Sprintf("ID:intrnl.unset.id.%s%d.%d", msg.GetName(), time.Now().Unix(), time.Now().UnixNano())
 	}
-	return msg.Id
+	return msg.ID
 }
 
+//GetName get msg type
 func (msg *TransferComplete) GetName() string {
 	return "TransferComplete"
 }
 
-func (msg *TransferComplete) CreateXml() []byte {
+//CreateXML encode into mxl
+func (msg *TransferComplete) CreateXML() []byte {
 	env := Envelope{}
 	env.XmlnsEnv = "http://schemas.xmlsoap.org/soap/envelope/"
 	env.XmlnsEnc = "http://schemas.xmlsoap.org/soap/encoding/"
 	env.XmlnsXsd = "http://www.w3.org/2001/XMLSchema"
 	env.XmlnsXsi = "http://www.w3.org/2001/XMLSchema-instance"
 	env.XmlnsCwmp = "urn:dslforum-org:cwmp-1-0"
-	id := IdStruct{Attr: "1", Value: msg.GetId()}
+	id := IDStruct{Attr: "1", Value: msg.GetID()}
 	env.Header = HeaderStruct{ID: id}
-	var body TransferCompleteStruct
+	var body transferCompleteStruct
 	if len(msg.FaultString) > 0 {
 		fault := FaultStruct{FaultCode: msg.FaultCode, FaultString: msg.FaultString}
-		body = TransferCompleteStruct{
+		body = transferCompleteStruct{
 			CommandKey:   msg.CommandKey,
 			StartTime:    msg.StartTime,
 			CompleteTime: msg.CompleteTime,
 			Fault:        fault,
 		}
 	} else {
-		fmt.Println("nil")
-		body = TransferCompleteStruct{
+		body = transferCompleteStruct{
 			CommandKey:   msg.CommandKey,
 			StartTime:    msg.StartTime,
 			CompleteTime: msg.CompleteTime,
 		}
 	}
 
-	env.Body = TransferCompleteBodyStruct{body}
+	env.Body = transferCompleteBodyStruct{body}
 	//output, err := xml.Marshal(env)
 	output, err := xml.MarshalIndent(env, "  ", "    ")
 	if err != nil {
@@ -76,13 +79,14 @@ func (msg *TransferComplete) CreateXml() []byte {
 	return output
 }
 
+//Parse decode from xml
 func (msg *TransferComplete) Parse(xmlstr string) {
 	document, _ := dom.ParseString(xmlstr)
 	root := document.DocumentElement()
 	hdr := root.GetElementsByTagName("Header")
 	if hdr.Length() > 0 {
 		pNode := hdr.Item(0)
-		msg.Id = GetChildElementValue(pNode, "ID")
+		msg.ID = GetChildElementValue(pNode, "ID")
 	}
 	cmdKey := root.GetElementsByTagName("CommandKey")
 	if cmdKey.Length() > 0 {

@@ -6,44 +6,60 @@ import (
 )
 
 const (
-	MAPPEDADDRESS            = 0x0001
-	RESPONSEADDRESS          = 0x0002
-	CHANGEREQUEST            = 0x0003
-	SOURCEADDRESS            = 0x0004
-	CHANGEDADDRESS           = 0x0005
-	USERNAME                 = 0x0006
-	PASSWORD                 = 0x0007
-	MESSAGEINTEGRITY         = 0x0008
-	ERRORCODE                = 0x0009
-	UNKNOWNATTRIBUTE         = 0x000a
-	REFLECTEDFROM            = 0x000b
-	CONNECTIONREQUESTBINDING = 0xC001
-	BINDINGCHANGE            = 0xC002
-	DUMMY                    = 0x0000
+	//MappedAddress MAPPEDADDRESS
+	MappedAddress = 0x0001
+	//ResponseAddress RESPONSEADDRESS
+	ResponseAddress = 0x0002
+	//ChangeRequest CHANGEREQUEST
+	ChangeRequest = 0x0003
+	//SourceAddress SOURCEADDRESS
+	SourceAddress = 0x0004
+	//ChangedAddress CHANGEDADDRESS
+	ChangedAddress = 0x0005
+	//Username USERNAME
+	Username = 0x0006
+	//Password PASSWORD
+	Password = 0x0007
+	//MessageIntegrity MESSAGEINTEGRITY
+	MessageIntegrity = 0x0008
+	//ErrorCode ERRORCODE
+	ErrorCode = 0x0009
+	//UnknownAttribute UNKNOWNATTRIBUTE
+	UnknownAttribute = 0x000a
+	//ReflectedFrom REFLECTEDFROM
+	ReflectedFrom = 0x000b
+	//ConnectionRequestBinding CONNECTIONREQUESTBINDING
+	ConnectionRequestBinding = 0xC001
+	//BindingChange BINDINGCHANGE
+	BindingChange = 0xC002
+	//Dummy DUMMY
+	Dummy = 0x0000
 )
 
-type attribute interface {
+//Attribute stun msg attribute
+type Attribute interface {
 	//getType() uint16
 	//getLength() uint16
 	//getVal() string
 	parse(buf []byte)
 }
 
-func ParseAttrs(buf []byte) (attributes []attribute) {
+//ParseAttrs parse attributes
+func ParseAttrs(buf []byte) (attributes []Attribute) {
 	var (
 		attrType uint16
 		length   uint16
 	)
 	if len(buf) > 0 {
-		attributes = make([]attribute, 1)
+		attributes = make([]Attribute, 1)
 		attrType = encode.Binary.Uint16(buf[0:2])
 		length = encode.Binary.Uint16(buf[2:4])
 		switch attrType {
-		case PASSWORD:
+		case Password:
 			passwd := &password{}
 			passwd.parse(buf[4 : 4+length])
 			attributes = append(attributes, passwd)
-		case CONNECTIONREQUESTBINDING:
+		case ConnectionRequestBinding:
 		}
 
 	}

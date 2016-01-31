@@ -4,7 +4,8 @@ import (
 	"github.com/coraldane/godom"
 )
 
-func ParseXml(xmlstr string) (Message, error) {
+//ParseXML parse xml msg
+func ParseXML(xmlstr string) (Message, error) {
 	document, err := dom.ParseString(xmlstr)
 	root := document.DocumentElement()
 	body := root.GetElementsByTagName("Body")
@@ -41,6 +42,7 @@ func ParseXml(xmlstr string) (Message, error) {
 	return msg, err
 }
 
+//GetChildElementValue get xml child node value
 func GetChildElementValue(pNode dom.Node, name string) string {
 	if pNode.NodeType() == dom.ELEMENT_NODE && pNode.HasChildNodes() {
 		nodes := pNode.ChildNodes()
@@ -49,8 +51,6 @@ func GetChildElementValue(pNode dom.Node, name string) string {
 			if node.NodeName() == name {
 				if node.HasChildNodes() {
 					return node.FirstChild().NodeValue()
-				} else {
-					return ""
 				}
 			}
 		}
@@ -58,6 +58,7 @@ func GetChildElementValue(pNode dom.Node, name string) string {
 	return ""
 }
 
+//GetFirstChild get xml first node
 func GetFirstChild(pNode dom.Node) dom.Node {
 	nodes := pNode.ChildNodes()
 	for i := uint(0); i < nodes.Length(); i++ {

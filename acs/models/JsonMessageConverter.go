@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	DEFAULT_CLASSID_FIELD_NAME string = "__TypeId__"
+	defaultClassIDFieldName string = "__TypeId__"
 )
 
 var idClassMapping map[string]reflect.Type
-var classIdMapping map[reflect.Type]string
+var classIDMapping map[reflect.Type]string
 
 func init() {
 	idClassMapping = map[string]reflect.Type{
@@ -33,7 +33,7 @@ func init() {
 		"ValueChange":                reflect.TypeOf(messages.ValueChange{}),
 	}
 
-	classIdMapping = map[reflect.Type]string{
+	classIDMapping = map[reflect.Type]string{
 		reflect.TypeOf(&messages.GetParameterValues{}):         "GetParameterValues",
 		reflect.TypeOf(&messages.GetParameterValuesResponse{}): "GetParameterValuesResponse",
 		reflect.TypeOf(&messages.SetParameterValues{}):         "SetParameterValues",
@@ -51,9 +51,10 @@ func init() {
 	}
 }
 
+//FromMessage tr069 msg decode
 func FromMessage(m Message) messages.Message {
 	var msg messages.Message
-	value := m.Headers[DEFAULT_CLASSID_FIELD_NAME]
+	value := m.Headers[defaultClassIDFieldName]
 	if value != nil {
 		classid := fmt.Sprintf("%s", value)
 		clazz := idClassMapping[classid]
@@ -66,17 +67,18 @@ func FromMessage(m Message) messages.Message {
 	return msg
 }
 
+//CreateMessage tr069 msg encode
 func CreateMessage(m messages.Message, properties MessageProperties) (Message, error) {
 	typ := reflect.TypeOf(m)
-	clazz := classIdMapping[typ]
+	clazz := classIDMapping[typ]
 	body, err := json.Marshal(m)
 	if err != nil {
 		return Message{}, err
 	}
 	return Message{
 		MessageProperties: MessageProperties{
-			Headers:         amqp.Table{DEFAULT_CLASSID_FIELD_NAME: clazz},
-			CorrelationId:   properties.CorrelationId,
+			Headers:         amqp.Table{defaultClassIDFieldName: clazz},
+			CorrelationID:   properties.CorrelationID,
 			ReplyTo:         properties.ReplyTo,
 			ContentEncoding: properties.ContentEncoding,
 			ContentType:     properties.ContentType,

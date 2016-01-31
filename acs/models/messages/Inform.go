@@ -8,8 +8,9 @@ import (
 	"time"
 )
 
+//Inform tr069 inform (heartbeat)
 type Inform struct {
-	Id           string            `json:"id"`
+	ID           string            `json:"id"`
 	Name         string            `json:"name"`
 	Manufacturer string            `json:"manufacturer"`
 	OUI          string            `json:"oui"`
@@ -22,12 +23,12 @@ type Inform struct {
 	Params       map[string]string `json:"params"`
 }
 
-type InformBodyStruct struct {
-	Body InformStruct `xml:"cwmp:Inform"`
+type informBodyStruct struct {
+	Body informStruct `xml:"cwmp:Inform"`
 }
 
-type InformStruct struct {
-	DeviceId     DeviceIdStruct      `xml:"DeviceId"`
+type informStruct struct {
+	DeviceID     deviceIDStruct      `xml:"DeviceId"`
 	Event        EventStruct         `xml:"Event"`
 	MaxEnvelopes NodeStruct          `xml:"MaxEnvelopes"`
 	CurrentTime  NodeStruct          `xml:"CurrentTime"`
@@ -35,7 +36,7 @@ type InformStruct struct {
 	Params       ParameterListStruct `xml:"ParameterList"`
 }
 
-type DeviceIdStruct struct {
+type deviceIDStruct struct {
 	Type         string     `xml:"xsi:type,attr"`
 	Manufacturer NodeStruct `xml:"Manufacturer"`
 	OUI          NodeStruct `xml:"OUI"`
@@ -43,53 +44,56 @@ type DeviceIdStruct struct {
 	SerialNumber NodeStruct `xml:"SerialNumber"`
 }
 
+//GetName get msg type
 func (msg *Inform) GetName() string {
 	return "Inform"
 }
 
-func (msg *Inform) GetId() string {
-	if len(msg.Id) < 1 {
-		msg.Id = fmt.Sprintf("ID:intrnl.unset.id.%s%d.%d", msg.GetName(), time.Now().Unix(), time.Now().UnixNano())
+//GetID get msg id
+func (msg *Inform) GetID() string {
+	if len(msg.ID) < 1 {
+		msg.ID = fmt.Sprintf("ID:intrnl.unset.id.%s%d.%d", msg.GetName(), time.Now().Unix(), time.Now().UnixNano())
 	}
-	return msg.Id
+	return msg.ID
 }
 
-func (msg *Inform) CreateXml() []byte {
+//CreateXML encode into xml
+func (msg *Inform) CreateXML() []byte {
 	env := Envelope{}
-	id := IdStruct{"1", msg.GetId()}
+	id := IDStruct{"1", msg.GetID()}
 	env.XmlnsEnv = "http://schemas.xmlsoap.org/soap/envelope/"
 	env.XmlnsEnc = "http://schemas.xmlsoap.org/soap/encoding/"
 	env.XmlnsXsd = "http://www.w3.org/2001/XMLSchema"
 	env.XmlnsXsi = "http://www.w3.org/2001/XMLSchema-instance"
 	env.XmlnsCwmp = "urn:dslforum-org:cwmp-1-0"
 	env.Header = HeaderStruct{ID: id}
-	manufacturer := NodeStruct{Type: XSD_STRING, Value: msg.Manufacturer}
-	oui := NodeStruct{Type: XSD_STRING, Value: msg.OUI}
-	productClass := NodeStruct{Type: XSD_STRING, Value: msg.ProductClass}
-	serialNumber := NodeStruct{Type: XSD_STRING, Value: msg.Sn}
-	deviceId := DeviceIdStruct{Type: "cwmp:DeviceIdStruct", Manufacturer: manufacturer, OUI: oui, ProductClass: productClass, SerialNumber: serialNumber}
+	manufacturer := NodeStruct{Type: XsdString, Value: msg.Manufacturer}
+	oui := NodeStruct{Type: XsdString, Value: msg.OUI}
+	productClass := NodeStruct{Type: XsdString, Value: msg.ProductClass}
+	serialNumber := NodeStruct{Type: XsdString, Value: msg.Sn}
+	deviceID := deviceIDStruct{Type: "cwmp:DeviceIdStruct", Manufacturer: manufacturer, OUI: oui, ProductClass: productClass, SerialNumber: serialNumber}
 	eventLen := strconv.Itoa(len(msg.Events))
 	event := EventStruct{Type: "cwmp:EventStruct[" + eventLen + "]"}
 	for k, v := range msg.Events {
-		eventCode := NodeStruct{Type: XSD_STRING, Value: k}
+		eventCode := NodeStruct{Type: XsdString, Value: k}
 		event.Events = append(event.Events, EventNodeStruct{EventCode: eventCode, CommandKey: v})
 	}
 
 	maxEnv := strconv.Itoa(msg.MaxEnvelopes)
-	maxEnvelopes := NodeStruct{Type: XSD_UNSIGNEDINT, Value: maxEnv}
-	currentTime := NodeStruct{Type: XSD_STRING, Value: msg.CurrentTime}
+	maxEnvelopes := NodeStruct{Type: XsdString, Value: maxEnv}
+	currentTime := NodeStruct{Type: XsdString, Value: msg.CurrentTime}
 	trys := strconv.Itoa(msg.RetryCount)
-	retryCount := NodeStruct{Type: XSD_UNSIGNEDINT, Value: trys}
+	retryCount := NodeStruct{Type: XsdString, Value: trys}
 	paramLen := strconv.Itoa(len(msg.Params))
 	paramList := ParameterListStruct{Type: "cwmp:ParameterValueStruct[" + paramLen + "]"}
 	for k, v := range msg.Params {
 		param := ParameterValueStruct{
-			Name:  NodeStruct{Type: XSD_STRING, Value: k},
-			Value: NodeStruct{Type: XSD_STRING, Value: v}}
+			Name:  NodeStruct{Type: XsdString, Value: k},
+			Value: NodeStruct{Type: XsdString, Value: v}}
 		paramList.Params = append(paramList.Params, param)
 	}
-	info := InformStruct{DeviceId: deviceId, Event: event, MaxEnvelopes: maxEnvelopes, CurrentTime: currentTime, RetryCount: retryCount, Params: paramList}
-	env.Body = InformBodyStruct{info}
+	info := informStruct{DeviceID: deviceID, Event: event, MaxEnvelopes: maxEnvelopes, CurrentTime: currentTime, RetryCount: retryCount, Params: paramList}
+	env.Body = informBodyStruct{info}
 	output, err := xml.MarshalIndent(env, "  ", "    ")
 	//output, err := xml.Marshal(env)
 	if err != nil {
@@ -98,13 +102,14 @@ func (msg *Inform) CreateXml() []byte {
 	return output
 }
 
+//Parse decode from xml
 func (msg *Inform) Parse(xmlstr string) {
 	document, _ := dom.ParseString(xmlstr)
 	root := document.DocumentElement()
 	hdr := root.GetElementsByTagName("Header")
 	if hdr.Length() > 0 {
 		pNode := hdr.Item(0)
-		msg.Id = GetChildElementValue(pNode, "ID")
+		msg.ID = GetChildElementValue(pNode, "ID")
 	}
 	deviceid := root.GetElementsByTagName("DeviceId")
 	if deviceid.Length() > 0 {
@@ -163,15 +168,22 @@ func (msg *Inform) Parse(xmlstr string) {
 
 }
 
+//IsEvent is a connect request or others
 func (msg *Inform) IsEvent(event string) bool {
-	for k, _ := range msg.Events {
-		if k == event {
-			return true
+	/*
+		for k,_:= range msg.Events {
+			if k == event {
+				return true
+			}
 		}
+	*/
+	if _, ok := msg.Events[event]; ok {
+		return true
 	}
 	return false
 }
 
+//GetParam get param in inform
 func (msg *Inform) GetParam(name string) (value string) {
 	/*
 		for k, v := range msg.Params {
@@ -185,6 +197,7 @@ func (msg *Inform) GetParam(name string) (value string) {
 	return
 }
 
+//GetConfigVersion get current config version
 func (msg *Inform) GetConfigVersion() (version string) {
 	version = msg.GetParam("InternetGatewayDevice.DeviceConfig.ConfigVersion")
 	return

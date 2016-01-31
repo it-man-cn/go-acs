@@ -9,8 +9,8 @@ import (
 type bindingRequest struct {
 	Type       int16
 	Length     int16
-	Id         []byte
-	Attributes []attribute
+	ID         []byte
+	Attributes []Attribute
 }
 
 func (msg *bindingRequest) Decode(buf []byte) {
@@ -21,9 +21,9 @@ func (msg *bindingRequest) Decode(buf []byte) {
 
 	msg.Length = encode.Binary.Int16(buf[2:4])
 	fmt.Printf("msg length %d\n", msg.Length)
-	msg.Id = buf[4:20]
+	msg.ID = buf[4:20]
 	//msg.Id = string(buf[4:20])
-	fmt.Println("msg id:" + hex.EncodeToString(msg.Id))
+	fmt.Println("msg id:" + hex.EncodeToString(msg.ID))
 	msg.Attributes = ParseAttrs(buf[20:msg.Length])
 	fmt.Printf("out parse attrs len: %d\n", len(msg.Attributes))
 	password := msg.Attributes[0].(*password)

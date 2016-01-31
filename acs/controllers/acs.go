@@ -4,54 +4,54 @@ import (
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"github.com/garyburd/redigo/redis"
-	. "go-acs/acs/log"
+	log "go-acs/acs/log"
 	"go-acs/acs/models"
 	"go-acs/acs/models/messages"
 	"time"
 )
 
 var (
-	RedisClient *redis.Pool
-	REDIS_HOST  string
-	REDIS_DB    int
+	redisClient *redis.Pool
 )
 
 func init() {
-	REDIS_HOST = beego.AppConfig.String("redis.host")
-	REDIS_DB, _ = beego.AppConfig.Int("redis.db")
-	RedisClient = &redis.Pool{
+	redisHost := beego.AppConfig.String("redis.host")
+	redisDB, _ := beego.AppConfig.Int("redis.db")
+	redisClient = &redis.Pool{
 		MaxIdle:     beego.AppConfig.DefaultInt("redis.maxidle", 1),
 		MaxActive:   beego.AppConfig.DefaultInt("redis.maxactive", 10),
 		IdleTimeout: 180 * time.Second,
 		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", REDIS_HOST)
+			c, err := redis.Dial("tcp", redisHost)
 			if err != nil {
 				return nil, err
 			}
-			c.Do("SELECT", REDIS_DB)
+			c.Do("SELECT", redisDB)
 			return c, nil
 		},
 	}
 }
 
+//MainController process tr069
 type MainController struct {
 	beego.Controller
 }
 
 const (
-	MIN_MAX_ENVELOPES int    = 1
-	MY_MAX_ENVELOPES  int    = 1
-	ATTR_LASTINFORM   string = "ATTR_LASTINFORM"
-	ATTR_SN           string = "ATTR_SN"
-	ATTR_CORR_ID      string = "ATTR_CORR_ID"
-	ATTR_REPLY_TO     string = "ATTR_REPLY_TO"
+	minMaxEnvelopes int    = 1
+	maxEnvelopes    int    = 1
+	attrLastInform  string = "ATTR_LASTINFORM"
+	attrSN          string = "ATTR_SN"
+	attrCorrID      string = "ATTR_CORR_ID"
+	attrReplyTo     string = "ATTR_REPLY_TO"
 )
 
+//Get tr069 msg
 func (c *MainController) Get() {
 	c.processRequest()
-
 }
 
+//Post tr069 msg
 func (c *MainController) Post() {
 	c.processRequest()
 }
@@ -61,22 +61,22 @@ func (c *MainController) processRequest() {
 	var response []byte
 	var countEnvelopes, maxEnvelopes int = 0, 0
 	var lastInform *messages.Inform
-	inform := c.Ctx.Input.CruSession.Get(ATTR_LASTINFORM)
+	inform := c.Ctx.Input.CruSession.Get(attrLastInform)
 	if inform != nil {
 		lastInform = inform.(*messages.Inform)
 	}
 	if lastInform != nil {
 		maxEnvelopes = lastInform.MaxEnvelopes
 	} else {
-		maxEnvelopes = MIN_MAX_ENVELOPES
+		maxEnvelopes = minMaxEnvelopes
 	}
 
-	if maxEnvelopes < MIN_MAX_ENVELOPES {
-		Logger.Info("MaxEnvelopes are less then ", MIN_MAX_ENVELOPES, "(", maxEnvelopes, ").Setting to", MIN_MAX_ENVELOPES)
+	if maxEnvelopes < minMaxEnvelopes {
+		log.Info("MaxEnvelopes are less then ", minMaxEnvelopes, "(", maxEnvelopes, ").Setting to", minMaxEnvelopes)
 		maxEnvelopes = 1
 	}
 
-	var cpeSentEmptyReq bool = true
+	cpeSentEmptyReq := true
 	var sn string
 	if len(requestBody) > 0 {
 		cpeSentEmptyReq = false
@@ -85,35 +85,35 @@ func (c *MainController) processRequest() {
 			reqType := msg.GetName()
 			if "Inform" == reqType {
 				lastInform = msg.(*messages.Inform)
-				c.Ctx.Input.CruSession.Set(ATTR_LASTINFORM, lastInform)
+				c.Ctx.Input.CruSession.Set(attrLastInform, lastInform)
 				sn = lastInform.Sn
-				c.Ctx.Input.CruSession.Set(ATTR_SN, sn)
+				c.Ctx.Input.CruSession.Set(attrSN, sn)
 				//lastInform (cpe info) store in memcache
 				//TODO
 				//response
 				resp := new(messages.InformResponse)
 				resp.Id = lastInform.Id
-				resp.MaxEnvelopes = MY_MAX_ENVELOPES
+				resp.MaxEnvelopes = maxEnvelopes
 				response = resp.CreateXml()
 				countEnvelopes++
 				maxEnvelopes = lastInform.MaxEnvelopes
-				Logger.Debug(lastInform.GetId())
+				log.Debug(lastInform.GetId())
 				//log inform
 				if lastInform.IsEvent(messages.EVENT_PERIODIC) {
 					bytesReceived := lastInform.GetParam("InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.Stats.EthernetBytesReceived")
 					if len(bytesReceived) > 0 {
 						//go
-						Logger.Debug("inform write sn:" + sn)
+						log.Debug("inform write sn:" + sn)
 						select {
-						case models.INFORM_CHANNEL <- models.Receive{sn, bytesReceived}:
-							Logger.Debug("channel rwrite ok id: %s\n", sn)
+						case models.InformChan <- models.Receive{Sn: sn, BytesReceived: bytesReceived}:
+							log.Debug("channel rwrite ok id: %s\n", sn)
 						default:
-							Logger.Debug("channel write block")
+							log.Debug("channel write block")
 						}
 					}
 					//compare config version
 					key := "inform_" + sn
-					rc := RedisClient.Get()
+					rc := redisClient.Get()
 					r, err := redis.String(rc.Do("GET", key))
 					defer rc.Close()
 					if len(r) > 0 && err == nil {
@@ -124,14 +124,14 @@ func (c *MainController) processRequest() {
 						newVersion := lastInform.GetConfigVersion()
 						if oldVersion != newVersion {
 							//need update config
-							Logger.Debug("config version chagne,need change sn:%s\n", sn)
+							log.Debug("config version chagne,need change sn:%s\n", sn)
 							inform := new(messages.ValueChange)
 							inform.Sn = sn
 							select {
-							case models.CHANGE_CHANNEL <- inform:
-								Logger.Debug("value change channel rwrite ok id: %s\n", sn)
+							case models.ChangeChan <- inform:
+								log.Debug("value change channel rwrite ok id: %s\n", sn)
 							default:
-								Logger.Debug("value change channel write block")
+								log.Debug("value change channel write block")
 							}
 						}
 					}
@@ -140,22 +140,22 @@ func (c *MainController) processRequest() {
 					inform := new(messages.ValueChange)
 					inform.Sn = sn
 					select {
-					case models.CHANGE_CHANNEL <- inform:
-						Logger.Debug("value change channel rwrite ok id: %s\n", sn)
+					case models.ChangeChan <- inform:
+						log.Debug("value change channel rwrite ok id: %s\n", sn)
 					default:
-						Logger.Debug("value change channel write block")
+						log.Debug("value change channel write block")
 					}
 				}
 				stamp := time.Now().Format("2006-01-02 15:04:05")
 				values, err := json.Marshal(models.InformMessage{Inform: lastInform, Timestamp: stamp})
-				if err == nil {
+				if err != nil {
+					log.Error("%s json encode Error %v\n", sn, err)
+				} else {
 					key := "inform_" + sn
 					value := string(values)
-					rc := RedisClient.Get()
+					rc := redisClient.Get()
 					rc.Do("SETEX", key, 600, value)
 					defer rc.Close()
-				} else {
-					Logger.Error("Error %v", err)
 				}
 			} else if "TransferComplete" == reqType {
 				tc := msg.(*messages.TransferComplete)
@@ -171,16 +171,16 @@ func (c *MainController) processRequest() {
 				response = resp.CreateXml()
 				countEnvelopes++
 			} else {
-				c.SendRPCResponse(msg)
+				c.sendRPCResponse(msg)
 				//dosomethin ,update log status
 				//has message any more
-				inform := c.Ctx.Input.CruSession.Get(ATTR_LASTINFORM)
+				inform := c.Ctx.Input.CruSession.Get(attrLastInform)
 				if inform != nil {
 					lastInform = inform.(*messages.Inform)
-					msg := c.ReceiveMsg(lastInform.Sn, 1000)
+					msg := c.receiveMsg(lastInform.Sn, 1000)
 					if msg != nil {
 						response = msg.CreateXml()
-						Logger.Debug("response:", string(response))
+						log.Debug("response:", string(response))
 					}
 				}
 
@@ -196,10 +196,10 @@ func (c *MainController) processRequest() {
 		idle, keepalive := 0, 0
 		for countEnvelopes < maxEnvelopes {
 			//Get command from MQ(RabbitMQ)
-			Logger.Debug("sn:%s,Host:%s,IP:%s", sn, c.Ctx.Input.Host(), c.Ctx.Input.IP())
-			msg := c.ReceiveMsg(sn, 1000)
+			log.Debug("sn:%s,Host:%s,IP:%s", sn, c.Ctx.Input.Host(), c.Ctx.Input.IP())
+			msg := c.receiveMsg(sn, 1000)
 			if msg == nil && lastInform.IsEvent(messages.EVENT_CONNECTION_REQUEST) {
-				msg = c.ReceiveMsg(sn, 2000)
+				msg = c.receiveMsg(sn, 2000)
 			}
 
 			if msg == nil {
@@ -212,7 +212,7 @@ func (c *MainController) processRequest() {
 				}
 			}
 			response = msg.CreateXml()
-			Logger.Debug("response:", string(response))
+			log.Debug("response:", string(response))
 			//need CPE do something
 			countEnvelopes++
 		}
@@ -220,31 +220,31 @@ func (c *MainController) processRequest() {
 	//c.Ctx.Output.Header("ContentType", "text/xml")
 	//c.Ctx.Output.ContentType("text/xml")
 	c.Ctx.Output.Header("Content-Type", "application/xml; charset=utf-8")
-	//c.Ctx.Output.Xml(data, hasIndent)
+	//c.Ctx.Output.XML(data, hasIndent)
 	c.Ctx.Output.Body(response)
 }
 
-func (c *MainController) ReceiveMsg(sn string, timeout int) messages.Message {
+func (c *MainController) receiveMsg(sn string, timeout int) messages.Message {
 	msg := models.ReciveMsg("acs." + sn)
-	Logger.Debug("recv body:", string(msg.Body))
+	log.Debug("recv body:", string(msg.Body))
 	m := models.FromMessage(msg)
 	if m != nil {
 		//store info to session
-		Logger.Debug("msgId:" + m.GetId())
-		Logger.Debug("corrId:" + msg.CorrelationId)
-		Logger.Debug("replyTo:" + msg.ReplyTo)
-		c.Ctx.Input.CruSession.Set(ATTR_CORR_ID, msg.CorrelationId)
-		c.Ctx.Input.CruSession.Set(ATTR_REPLY_TO, msg.ReplyTo)
+		log.Debug("msgId:" + m.GetId())
+		log.Debug("corrId:" + msg.CorrelationID)
+		log.Debug("replyTo:" + msg.ReplyTo)
+		c.Ctx.Input.CruSession.Set(attrCorrID, msg.CorrelationID)
+		c.Ctx.Input.CruSession.Set(attrReplyTo, msg.ReplyTo)
 	}
 	return m
 }
 
-func (c *MainController) SendRPCResponse(msg messages.Message) error {
-	corrId := c.Ctx.Input.CruSession.Get(ATTR_CORR_ID)
-	replyTo := c.Ctx.Input.CruSession.Get(ATTR_REPLY_TO)
-	if replyTo != nil && corrId != nil {
+func (c *MainController) sendRPCResponse(msg messages.Message) error {
+	corrID := c.Ctx.Input.CruSession.Get(attrCorrID)
+	replyTo := c.Ctx.Input.CruSession.Get(attrReplyTo)
+	if replyTo != nil && corrID != nil {
 		props := models.MessageProperties{
-			CorrelationId:   corrId.(string),
+			CorrelationID:   corrID.(string),
 			ReplyTo:         replyTo.(string),
 			ContentEncoding: "UTF-8",
 			ContentType:     "application/json",
