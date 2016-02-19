@@ -49,8 +49,8 @@ func TestConverter(t *testing.T) {
 	data := `{"id":"ID:intrnl.unset.id.GetParameterValues1439956067715.344209010","name":"GetParameterValues","noMore":1,"parameterNames":["InternetGatewayDevice.DeviceInfo.Manufacturer","InternetGatewayDevice.DeviceInfo.OUI"]}`
 	msg := new(messages.GetParameterValues)
 	json.Unmarshal([]byte(data), &msg)
-	fmt.Println(msg.Id)
+	fmt.Println(msg.ID)
 	fmt.Println(msg.Name)
 	fmt.Println(msg.ParameterNames)
-	fmt.Println(string(msg.CreateXml()))
+	fmt.Println(string(msg.CreateXML()))
 }

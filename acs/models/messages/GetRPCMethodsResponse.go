@@ -3,8 +3,9 @@ package messages
 import (
 	"encoding/xml"
 	"fmt"
-	"github.com/coraldane/godom"
+	"github.com/jteeuwen/go-pkg-xmlx"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -71,36 +72,18 @@ func (msg *GetRPCMethodsResponse) CreateXML() []byte {
 }
 
 //Parse decode from xml
-func (msg *GetRPCMethodsResponse) Parse(xmlstr string) {
-	document, _ := dom.ParseString(xmlstr)
-	root := document.DocumentElement()
-	hdr := root.GetElementsByTagName("Header")
-	if hdr.Length() > 0 {
-		pNode := hdr.Item(0)
-		msg.ID = GetChildElementValue(pNode, "ID")
-	}
+func (msg *GetRPCMethodsResponse) Parse(doc *xmlx.Document) {
 
-	methodList := root.GetElementsByTagName("MethodList")
-	if methodList.Length() > 0 {
+	msg.ID = doc.SelectNode("*", "ID").GetValue()
+
+	methodList := doc.SelectNode("*", "MethodList")
+	if len(strings.TrimSpace(methodList.String())) > 0 {
+		var name string
 		var methods []string
-		for i := uint(0); i < methodList.Length(); i++ {
-			pi := methodList.Item(i)
-			if pi.NodeType() == dom.ELEMENT_NODE {
-				nodes := pi.ChildNodes()
-				var name string
-				for j := uint(0); j < nodes.Length(); j++ {
-					node := nodes.Item(j)
-					name = ""
-					if node.NodeType() == dom.ELEMENT_NODE {
-						if "string" == node.NodeName() && node.HasChildNodes() {
-							name = node.FirstChild().NodeValue()
-							if len(name) > 0 {
-								methods = append(methods, name)
-							}
-						}
-					}
-				}
-
+		for _, param := range methodList.Children {
+			if len(strings.TrimSpace(param.String())) > 0 {
+				name = param.GetValue()
+				methods = append(methods, name)
 			}
 		}
 		msg.Methods = methods

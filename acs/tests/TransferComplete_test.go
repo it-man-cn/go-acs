@@ -13,7 +13,7 @@ func TestCreateTransferComplete(t *testing.T) {
 	resp.CompleteTime = "2015-02-12T13:40:07"
 	resp.FaultCode = 1
 	resp.FaultString = "error"
-	fmt.Println(string(resp.CreateXml()))
+	fmt.Println(string(resp.CreateXML()))
 }
 
 func TestParseTransferComplete(t *testing.T) {
@@ -34,7 +34,7 @@ func TestParseTransferComplete(t *testing.T) {
 	          </cwmp:TransferComplete>
 	      </SOAP-ENV:Body>
 	  </SOAP-ENV:Envelope>`
-	msg, _ := messages.ParseXml(data)
+	msg, _ := messages.ParseXML([]byte(data))
 	resp := msg.(*messages.TransferComplete)
 	fmt.Println(resp.CommandKey)
 	fmt.Println(resp.StartTime)

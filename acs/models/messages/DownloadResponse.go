@@ -3,7 +3,7 @@ package messages
 import (
 	"encoding/xml"
 	"fmt"
-	"github.com/coraldane/godom"
+	"github.com/jteeuwen/go-pkg-xmlx"
 	"strconv"
 	"time"
 )
@@ -65,24 +65,17 @@ func (msg *DownloadResponse) CreateXML() []byte {
 }
 
 //Parse decode into struct
-func (msg *DownloadResponse) Parse(xmlstr string) {
-	document, _ := dom.ParseString(xmlstr)
-	root := document.DocumentElement()
-	hdr := root.GetElementsByTagName("Header")
-	if hdr.Length() > 0 {
-		pNode := hdr.Item(0)
-		msg.ID = GetChildElementValue(pNode, "ID")
+func (msg *DownloadResponse) Parse(doc *xmlx.Document) {
+	msg.ID = doc.SelectNode("*", "ID").GetValue()
+	statusNode := doc.SelectNode("*", "Status")
+	if statusNode != nil {
+		var err error
+		msg.Status, err = strconv.Atoi(statusNode.GetValue())
+		if err != nil {
+			fmt.Printf("error: %v\n", err)
+		}
 	}
-	status := root.GetElementsByTagName("Status")
-	if status.Length() > 0 {
-		msg.Status, _ = strconv.Atoi(status.Item(0).FirstChild().NodeValue())
-	}
-	startTime := root.GetElementsByTagName("StartTime")
-	if startTime.Length() > 0 {
-		msg.StartTime = startTime.Item(0).FirstChild().NodeValue()
-	}
-	completeTime := root.GetElementsByTagName("CompleteTime")
-	if completeTime.Length() > 0 {
-		msg.CompleteTime = completeTime.Item(0).FirstChild().NodeValue()
-	}
+
+	msg.StartTime = doc.SelectNode("*", "StartTime").GetValue()
+	msg.CompleteTime = doc.SelectNode("*", "CompleteTime").GetValue()
 }

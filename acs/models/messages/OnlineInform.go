@@ -1,5 +1,9 @@
 package messages
 
+import (
+	"github.com/jteeuwen/go-pkg-xmlx"
+)
+
 //OnlineInform online client
 type OnlineInform struct {
 	Sn    string `json:"sn"`
@@ -27,6 +31,6 @@ func (msg *OnlineInform) CreateXML() (xml []byte) {
 }
 
 //Parse parse from xml
-func (msg *OnlineInform) Parse(xmlstr string) {
+func (msg *OnlineInform) Parse(doc *xmlx.Document) {
 	//TODO
 }

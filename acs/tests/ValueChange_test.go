@@ -15,7 +15,7 @@ func TestValueChange(t *testing.T) {
 	inform.Sn = sn
 	queuename := "WX_VALUE_CHANGE"
 	props := models.MessageProperties{
-		CorrelationId:   "",
+		CorrelationID:   "",
 		ReplyTo:         queuename,
 		ContentEncoding: "UTF-8",
 		ContentType:     "application/json",

@@ -3,7 +3,7 @@ package messages
 import (
 	"encoding/xml"
 	"fmt"
-	"github.com/coraldane/godom"
+	"github.com/jteeuwen/go-pkg-xmlx"
 	"strconv"
 	"time"
 )
@@ -80,32 +80,16 @@ func (msg *TransferComplete) CreateXML() []byte {
 }
 
 //Parse decode from xml
-func (msg *TransferComplete) Parse(xmlstr string) {
-	document, _ := dom.ParseString(xmlstr)
-	root := document.DocumentElement()
-	hdr := root.GetElementsByTagName("Header")
-	if hdr.Length() > 0 {
-		pNode := hdr.Item(0)
-		msg.ID = GetChildElementValue(pNode, "ID")
+func (msg *TransferComplete) Parse(doc *xmlx.Document) {
+	msg.ID = doc.SelectNode("*", "ID").GetValue()
+	msg.CommandKey = doc.SelectNode("*", "CommandKey").GetValue()
+	msg.CompleteTime = doc.SelectNode("*", "CompleteTime").GetValue()
+	msg.StartTime = doc.SelectNode("*", "StartTime").GetValue()
+	msg.FaultString = doc.SelectNode("*", "FaultString").GetValue()
+	faultCode, err := strconv.Atoi(doc.SelectNode("*", "FaultCode").GetValue())
+	if err != nil {
+		fmt.Printf("falutCode error %v\n", err)
 	}
-	cmdKey := root.GetElementsByTagName("CommandKey")
-	if cmdKey.Length() > 0 {
-		msg.CommandKey = cmdKey.Item(0).FirstChild().NodeValue()
-	}
-	startTime := root.GetElementsByTagName("StartTime")
-	if startTime.Length() > 0 {
-		msg.StartTime = startTime.Item(0).FirstChild().NodeValue()
-	}
-	completeTime := root.GetElementsByTagName("CompleteTime")
-	if completeTime.Length() > 0 {
-		msg.CompleteTime = completeTime.Item(0).FirstChild().NodeValue()
-	}
-	faultCode := root.GetElementsByTagName("FaultCode")
-	if faultCode.Length() > 0 {
-		msg.FaultCode, _ = strconv.Atoi(faultCode.Item(0).FirstChild().NodeValue())
-	}
-	faultString := root.GetElementsByTagName("FaultString")
-	if faultString.Length() > 0 {
-		msg.FaultString = faultString.Item(0).FirstChild().NodeValue()
-	}
+	msg.FaultCode = faultCode
+
 }

@@ -11,7 +11,7 @@ func TestCreateDownloadResponse(t *testing.T) {
 	resp.Status = 1
 	resp.StartTime = "2015-02-12T13:40:07"
 	resp.CompleteTime = "2015-02-12T13:40:07"
-	fmt.Println(string(resp.CreateXml()))
+	fmt.Println(string(resp.CreateXML()))
 }
 
 func TestParseDownloadResponse(t *testing.T) {
@@ -27,7 +27,7 @@ func TestParseDownloadResponse(t *testing.T) {
 	          </cwmp:DownloadResponse>
 	      </SOAP-ENV:Body>
 	  </SOAP-ENV:Envelope>`
-	msg, _ := messages.ParseXml(data)
+	msg, _ := messages.ParseXML([]byte(data))
 	resp := msg.(*messages.DownloadResponse)
 	fmt.Println(resp.Status)
 	fmt.Println(resp.StartTime)

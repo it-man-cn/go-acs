@@ -19,7 +19,7 @@ func TestParseRebootResponse(t *testing.T) {
 <cwmp:RebootResponse></cwmp:RebootResponse>
 </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>`
-	msg, _ := messages.ParseXml(data)
+	msg, _ := messages.ParseXML([]byte(data))
 	fmt.Println(msg)
 	//resp := msg.(*messages.RebootResponse)
 }

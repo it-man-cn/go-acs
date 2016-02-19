@@ -8,7 +8,7 @@ import (
 
 func TestCreateSetParameterValuesResponse(t *testing.T) {
 	resp := new(messages.SetParameterValuesResponse)
-	fmt.Println(string(resp.CreateXml()))
+	fmt.Println(string(resp.CreateXML()))
 }
 
 func TestParseSetParameterValuesResponse(t *testing.T) {
@@ -24,7 +24,7 @@ func TestParseSetParameterValuesResponse(t *testing.T) {
 	          </cwmp:SetParameterValuesResponse>
 	      </SOAP-ENV:Body>
 	  </SOAP-ENV:Envelope>`
-	msg, _ := messages.ParseXml(data)
+	msg, _ := messages.ParseXML([]byte(data))
 	resp := msg.(*messages.SetParameterValuesResponse)
 	fmt.Println(resp.Status)
 	fmt.Println(resp.ParameterKey)

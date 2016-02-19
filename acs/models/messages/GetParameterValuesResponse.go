@@ -3,8 +3,9 @@ package messages
 import (
 	"encoding/xml"
 	"fmt"
-	"github.com/coraldane/godom"
+	"github.com/jteeuwen/go-pkg-xmlx"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -74,39 +75,18 @@ func (msg *GetParameterValuesResponse) CreateXML() []byte {
 }
 
 //Parse decode from xml
-func (msg *GetParameterValuesResponse) Parse(xmlstr string) {
-	document, _ := dom.ParseString(xmlstr)
-	root := document.DocumentElement()
-	hdr := root.GetElementsByTagName("Header")
-	if hdr.Length() > 0 {
-		pNode := hdr.Item(0)
-		msg.ID = GetChildElementValue(pNode, "ID")
-	}
-
-	paramList := root.GetElementsByTagName("ParameterValueStruct")
-	if paramList.Length() > 0 {
+func (msg *GetParameterValuesResponse) Parse(doc *xmlx.Document) {
+	msg.ID = doc.SelectNode("*", "ID").GetValue()
+	paramsNode := doc.SelectNode("*", "ParameterList")
+	if len(strings.TrimSpace(paramsNode.String())) > 0 {
 		params := make(map[string]string)
-		for i := uint(0); i < paramList.Length(); i++ {
-			pi := paramList.Item(i)
-			if pi.NodeType() == dom.ELEMENT_NODE {
-				nodes := pi.ChildNodes()
-				var name, value string
-				for j := uint(0); j < nodes.Length(); j++ {
-					node := nodes.Item(j)
-					if node.NodeType() == dom.ELEMENT_NODE {
-						if "Name" == node.NodeName() && node.HasChildNodes() {
-							name = node.FirstChild().NodeValue()
-						} else {
-							if node.HasChildNodes() {
-								value = node.FirstChild().NodeValue()
-							} else {
-								value = ""
-							}
-						}
-					} else {
-						continue
-					}
-				}
+		var name, value string
+		for _, param := range paramsNode.Children {
+			fmt.Println("param:", param)
+
+			if len(strings.TrimSpace(param.String())) > 0 {
+				name = param.SelectNode("", "Name").GetValue()
+				value = param.SelectNode("", "Value").GetValue()
 				params[name] = value
 			}
 

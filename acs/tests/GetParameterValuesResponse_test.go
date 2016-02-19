@@ -11,8 +11,8 @@ func TestCreateGetParameterValuesResponse(t *testing.T) {
 	params := make(map[string]string)
 	params["InternetGatewayDevice.DeviceInfo.Manufacturer"] = "ACS"
 	params["InternetGatewayDevice.DeviceInfo.OUI"] = "0011AB"
-	resp.Params = params
-	fmt.Println(string(resp.CreateXml()))
+	resp.Values = params
+	fmt.Println(string(resp.CreateXML()))
 }
 
 func TestParseGetParameterValuesResponse(t *testing.T) {
@@ -35,9 +35,9 @@ func TestParseGetParameterValuesResponse(t *testing.T) {
 	          </cwmp:GetParameterValuesResponse>
 	      </SOAP-ENV:Body>
 	  </SOAP-ENV:Envelope>`
-	msg, _ := messages.ParseXml(data)
+	msg, _ := messages.ParseXML([]byte(data))
 	resp := msg.(*messages.GetParameterValuesResponse)
-	for k, v := range resp.Params {
+	for k, v := range resp.Values {
 		fmt.Println(k, v)
 	}
 }

@@ -10,10 +10,10 @@ import (
 func TestCreateSetParameterValues(t *testing.T) {
 	resp := new(messages.SetParameterValues)
 	params := make(map[string]messages.ValueStruct)
-	param := messages.ValueStruct{messages.XSD_STRING, "abc"}
+	param := messages.ValueStruct{messages.XsdString, "abc"}
 	params["InternetGatewayDevice.DeviceInfo.Manufacturer"] = param
 	resp.Params = params
-	fmt.Println(string(resp.CreateXml()))
+	fmt.Println(string(resp.CreateXML()))
 	jsonstr, _ := json.Marshal(&resp)
 	fmt.Println(string(jsonstr))
 

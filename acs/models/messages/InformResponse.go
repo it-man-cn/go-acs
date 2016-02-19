@@ -3,6 +3,7 @@ package messages
 import (
 	"encoding/xml"
 	"fmt"
+	"github.com/jteeuwen/go-pkg-xmlx"
 	"time"
 )
 
@@ -56,6 +57,6 @@ func (msg *InformResponse) CreateXML() []byte {
 }
 
 //Parse decode from xml
-func (msg *InformResponse) Parse(xmlstr string) {
+func (msg *InformResponse) Parse(doc *xmlx.Document) {
 	//TODO
 }

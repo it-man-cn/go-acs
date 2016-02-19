@@ -2,6 +2,7 @@ package messages
 
 import (
 	"encoding/xml"
+	"github.com/jteeuwen/go-pkg-xmlx"
 )
 
 const (
@@ -39,7 +40,7 @@ const (
 
 //Message tr069 msg interface
 type Message interface {
-	Parse(xmlstr string)
+	Parse(doc *xmlx.Document)
 	CreateXML() []byte
 	GetName() string
 	GetID() string

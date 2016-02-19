@@ -11,7 +11,7 @@ func TestCreateGetRPCMethodsResponse(t *testing.T) {
 	var methods []string
 	methods = append(methods, "GetRPCMethods", "GetParameterNames")
 	resp.Methods = methods
-	fmt.Println(string(resp.CreateXml()))
+	fmt.Println(string(resp.CreateXML()))
 }
 
 func TestParseGetRPCMethodsResponse(t *testing.T) {
@@ -28,7 +28,7 @@ func TestParseGetRPCMethodsResponse(t *testing.T) {
 	          </cwmp:GetRPCMethodsResponse>
 	      </SOAP-ENV:Body>
 	  </SOAP-ENV:Envelope>`
-	msg, _ := messages.ParseXml(data)
+	msg, _ := messages.ParseXML([]byte(data))
 	resp := msg.(*messages.GetRPCMethodsResponse)
 	for _, v := range resp.Methods {
 		fmt.Println(v)

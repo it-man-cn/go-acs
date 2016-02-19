@@ -80,7 +80,7 @@ func (c *MainController) processRequest() {
 	var sn string
 	if len(requestBody) > 0 {
 		cpeSentEmptyReq = false
-		msg, err := messages.ParseXml(string(c.Ctx.Input.RequestBody))
+		msg, err := messages.ParseXML(c.Ctx.Input.RequestBody)
 		if err == nil {
 			reqType := msg.GetName()
 			if "Inform" == reqType {
@@ -92,14 +92,14 @@ func (c *MainController) processRequest() {
 				//TODO
 				//response
 				resp := new(messages.InformResponse)
-				resp.Id = lastInform.Id
+				resp.ID = lastInform.ID
 				resp.MaxEnvelopes = maxEnvelopes
-				response = resp.CreateXml()
+				response = resp.CreateXML()
 				countEnvelopes++
 				maxEnvelopes = lastInform.MaxEnvelopes
-				log.Debug(lastInform.GetId())
+				log.Debug(lastInform.GetID())
 				//log inform
-				if lastInform.IsEvent(messages.EVENT_PERIODIC) {
+				if lastInform.IsEvent(messages.EventPeriodic) {
 					bytesReceived := lastInform.GetParam("InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.Stats.EthernetBytesReceived")
 					if len(bytesReceived) > 0 {
 						//go
@@ -135,7 +135,7 @@ func (c *MainController) processRequest() {
 							}
 						}
 					}
-				} else if lastInform.IsEvent(messages.EVENT_VALUE_CHANGE) {
+				} else if lastInform.IsEvent(messages.EventValueChange) {
 					//update all config
 					inform := new(messages.ValueChange)
 					inform.Sn = sn
@@ -161,14 +161,14 @@ func (c *MainController) processRequest() {
 				tc := msg.(*messages.TransferComplete)
 				//do something
 				resp := new(messages.TransferCompleteResponse)
-				resp.Id = tc.Id
-				response = resp.CreateXml()
+				resp.ID = tc.ID
+				response = resp.CreateXML()
 				countEnvelopes++
 			} else if "GetRPCMethods" == reqType {
 				gm := msg.(*messages.GetRPCMethods)
 				resp := new(messages.GetRPCMethodsResponse)
-				resp.Id = gm.Id
-				response = resp.CreateXml()
+				resp.ID = gm.ID
+				response = resp.CreateXML()
 				countEnvelopes++
 			} else {
 				c.sendRPCResponse(msg)
@@ -179,7 +179,7 @@ func (c *MainController) processRequest() {
 					lastInform = inform.(*messages.Inform)
 					msg := c.receiveMsg(lastInform.Sn, 1000)
 					if msg != nil {
-						response = msg.CreateXml()
+						response = msg.CreateXML()
 						log.Debug("response:", string(response))
 					}
 				}
@@ -198,7 +198,7 @@ func (c *MainController) processRequest() {
 			//Get command from MQ(RabbitMQ)
 			log.Debug("sn:%s,Host:%s,IP:%s", sn, c.Ctx.Input.Host(), c.Ctx.Input.IP())
 			msg := c.receiveMsg(sn, 1000)
-			if msg == nil && lastInform.IsEvent(messages.EVENT_CONNECTION_REQUEST) {
+			if msg == nil && lastInform.IsEvent(messages.EventConnectionRequest) {
 				msg = c.receiveMsg(sn, 2000)
 			}
 
@@ -211,7 +211,7 @@ func (c *MainController) processRequest() {
 					continue
 				}
 			}
-			response = msg.CreateXml()
+			response = msg.CreateXML()
 			log.Debug("response:", string(response))
 			//need CPE do something
 			countEnvelopes++
@@ -230,7 +230,7 @@ func (c *MainController) receiveMsg(sn string, timeout int) messages.Message {
 	m := models.FromMessage(msg)
 	if m != nil {
 		//store info to session
-		log.Debug("msgId:" + m.GetId())
+		log.Debug("msgId:" + m.GetID())
 		log.Debug("corrId:" + msg.CorrelationID)
 		log.Debug("replyTo:" + msg.ReplyTo)
 		c.Ctx.Input.CruSession.Set(attrCorrID, msg.CorrelationID)

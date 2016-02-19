@@ -3,8 +3,10 @@ package messages
 import (
 	"encoding/xml"
 	"fmt"
-	"github.com/coraldane/godom"
+	//"github.com/coraldane/godom"
+	"github.com/jteeuwen/go-pkg-xmlx"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -42,6 +44,13 @@ type deviceIDStruct struct {
 	OUI          NodeStruct `xml:"OUI"`
 	ProductClass NodeStruct `xml:"ProductClass"`
 	SerialNumber NodeStruct `xml:"SerialNumber"`
+}
+
+func NewInform() *Inform {
+	inform := new(Inform)
+	inform.Events = make(map[string]string)
+	inform.Params = make(map[string]string)
+	return inform
 }
 
 //GetName get msg type
@@ -103,69 +112,52 @@ func (msg *Inform) CreateXML() []byte {
 }
 
 //Parse decode from xml
-func (msg *Inform) Parse(xmlstr string) {
-	document, _ := dom.ParseString(xmlstr)
-	root := document.DocumentElement()
-	hdr := root.GetElementsByTagName("Header")
-	if hdr.Length() > 0 {
-		pNode := hdr.Item(0)
-		msg.ID = GetChildElementValue(pNode, "ID")
+func (msg *Inform) Parse(doc *xmlx.Document) {
+	msg.ID = doc.SelectNode("*", "ID").GetValue()
+	deviceNode := doc.SelectNode("*", "DeviceId")
+	if len(strings.TrimSpace(deviceNode.String())) > 0 {
+		msg.Manufacturer = deviceNode.SelectNode("", "Manufacturer").GetValue()
+		msg.OUI = deviceNode.SelectNode("", "OUI").GetValue()
+		msg.ProductClass = deviceNode.SelectNode("", "ProductClass").GetValue()
+		msg.Sn = deviceNode.SelectNode("", "SerialNumber").GetValue()
 	}
-	deviceid := root.GetElementsByTagName("DeviceId")
-	if deviceid.Length() > 0 {
-		msg.Manufacturer = GetChildElementValue(deviceid.Item(0), "Manufacturer")
-		msg.OUI = GetChildElementValue(deviceid.Item(0), "OUI")
-		msg.ProductClass = GetChildElementValue(deviceid.Item(0), "ProductClass")
-		msg.Sn = GetChildElementValue(deviceid.Item(0), "SerialNumber")
-	}
-	info := root.GetElementsByTagName("Inform")
-	if info.Length() > 0 {
-		msg.MaxEnvelopes, _ = strconv.Atoi(GetChildElementValue(info.Item(0), "MaxEnvelopes"))
-		msg.CurrentTime = GetChildElementValue(info.Item(0), "CurrentTime")
-		msg.RetryCount, _ = strconv.Atoi(GetChildElementValue(info.Item(0), "RetryCount"))
-	}
-	event := root.GetElementsByTagName("Event")
-	if event.Length() > 0 && event.Item(0).HasChildNodes() {
-		events := make(map[string]string)
-		nodes := event.Item(0).ChildNodes()
-		for i := uint(0); i < nodes.Length(); i++ {
-			code := GetChildElementValue(nodes.Item(i), "EventCode")
-			key := GetChildElementValue(nodes.Item(i), "CommandKey")
-			events[code] = key
+	informNode := doc.SelectNode("*", "Inform")
+	if len(strings.TrimSpace(informNode.String())) > 0 {
+		var err error
+		msg.CurrentTime = informNode.SelectNode("", "CurrentTime").GetValue()
+		msg.MaxEnvelopes, err = strconv.Atoi(informNode.SelectNode("", "MaxEnvelopes").GetValue())
+		if err != nil {
+			fmt.Printf("error: %v\n", err)
 		}
-		msg.Events = events
+		msg.RetryCount, err = strconv.Atoi(informNode.SelectNode("", "RetryCount").GetValue())
+		if err != nil {
+			fmt.Printf("error: %v\n", err)
+		}
 	}
-	paramList := root.GetElementsByTagName("ParameterValueStruct")
-	if paramList.Length() > 0 {
-		params := make(map[string]string)
-		for i := uint(0); i < paramList.Length(); i++ {
-			pi := paramList.Item(i)
-			if pi.NodeType() == dom.ELEMENT_NODE {
-				nodes := pi.ChildNodes()
-				var name, value string
-				for j := uint(0); j < nodes.Length(); j++ {
-					node := nodes.Item(j)
-					if node.NodeType() == dom.ELEMENT_NODE {
-						if "Name" == node.NodeName() && node.HasChildNodes() {
-							name = node.FirstChild().NodeValue()
-						} else {
-							if node.HasChildNodes() {
-								value = node.FirstChild().NodeValue()
-							} else {
-								value = ""
-							}
-						}
-					} else {
-						continue
-					}
-				}
-				params[name] = value
+
+	eventNode := doc.SelectNode("*", "Event")
+	if len(strings.TrimSpace(eventNode.String())) > 0 {
+		//msg.Events = make(map[string]string)
+		var code string
+		for _, event := range eventNode.Children {
+			if len(strings.TrimSpace(event.String())) > 0 {
+				code = event.SelectNode("", "EventCode").GetValue()
+				msg.Events[code] = event.SelectNode("", "CommandKey").GetValue()
 			}
-
 		}
-		msg.Params = params
 	}
 
+	paramsNode := doc.SelectNode("*", "ParameterList")
+	if len(strings.TrimSpace(paramsNode.String())) > 0 {
+		//msg.Params = make(map[string]string)
+		var name string
+		for _, param := range paramsNode.Children {
+			if len(strings.TrimSpace(param.String())) > 0 {
+				name = param.SelectNode("", "Name").GetValue()
+				msg.Params[name] = param.SelectNode("", "Value").GetValue()
+			}
+		}
+	}
 }
 
 //IsEvent is a connect request or others

@@ -3,7 +3,7 @@ package messages
 import (
 	"encoding/xml"
 	"fmt"
-	"github.com/coraldane/godom"
+	"github.com/jteeuwen/go-pkg-xmlx"
 	"strconv"
 	"time"
 )
@@ -62,24 +62,21 @@ func (msg *SetParameterValuesResponse) CreateXML() []byte {
 }
 
 //Parse decode from xml
-func (msg *SetParameterValuesResponse) Parse(xmlstr string) {
-	document, _ := dom.ParseString(xmlstr)
-	root := document.DocumentElement()
-	hdr := root.GetElementsByTagName("Header")
-	if hdr.Length() > 0 {
-		pNode := hdr.Item(0)
-		msg.ID = GetChildElementValue(pNode, "ID")
-	}
-	status := root.GetElementsByTagName("Status")
-	if status.Length() > 0 {
-		msg.Status, _ = strconv.Atoi(status.Item(0).FirstChild().NodeValue())
-	}
-	key := root.GetElementsByTagName("ParameterKey")
-	fmt.Println("key", key)
-	if key.Length() > 0 {
-		fmt.Println("key item0", key.Item(0).HasChildNodes())
-		if key.Item(0).HasChildNodes() {
-			msg.ParameterKey = key.Item(0).FirstChild().NodeValue()
+func (msg *SetParameterValuesResponse) Parse(doc *xmlx.Document) {
+
+	msg.ID = doc.SelectNode("*", "ID").GetValue()
+
+	statusNode := doc.SelectNode("*", "Status")
+	if statusNode != nil {
+		var err error
+		msg.Status, err = strconv.Atoi(statusNode.GetValue())
+		if err != nil {
+			fmt.Printf("error: %v\n", err)
 		}
+	}
+
+	paramsNode := doc.SelectNode("*", "ParameterKey")
+	if paramsNode != nil {
+		msg.ParameterKey = paramsNode.GetValue()
 	}
 }

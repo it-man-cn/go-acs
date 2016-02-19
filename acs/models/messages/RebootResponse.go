@@ -3,7 +3,7 @@ package messages
 import (
 	"encoding/xml"
 	"fmt"
-	"github.com/coraldane/godom"
+	"github.com/jteeuwen/go-pkg-xmlx"
 	"time"
 )
 
@@ -54,12 +54,6 @@ func (msg *RebootResponse) CreateXML() []byte {
 }
 
 //Parse decode from xml
-func (msg *RebootResponse) Parse(xmlstr string) {
-	document, _ := dom.ParseString(xmlstr)
-	root := document.DocumentElement()
-	hdr := root.GetElementsByTagName("Header")
-	if hdr.Length() > 0 {
-		pNode := hdr.Item(0)
-		msg.ID = GetChildElementValue(pNode, "ID")
-	}
+func (msg *RebootResponse) Parse(doc *xmlx.Document) {
+	msg.ID = doc.SelectNode("*", "ID").GetValue()
 }

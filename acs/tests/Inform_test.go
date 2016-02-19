@@ -7,10 +7,10 @@ import (
 )
 
 func TestCreateInform(t *testing.T) {
-	inform := &messages.Inform{Id: "abc",
+	inform := &messages.Inform{ID: "abc",
 		Manufacturer: "ACS", OUI: "0011ab",
 		ProductClass: "it-man",
-		SerialNumber: "1456789",
+		Sn:           "1456789",
 		MaxEnvelopes: 1,
 		CurrentTime:  "2015-02-12T13:40:07",
 		RetryCount:   1}
@@ -20,7 +20,7 @@ func TestCreateInform(t *testing.T) {
 	params := make(map[string]string)
 	params["InternetGatewayDevice.DeviceInfo.Manufacturer"] = "ACS"
 	inform.Params = params
-	out := inform.CreateXml()
+	out := inform.CreateXML()
 	fmt.Println(string(out))
 
 }
@@ -97,13 +97,13 @@ func TestParseInform(t *testing.T) {
           </cwmp:Inform>
       </SOAP-ENV:Body>
   </SOAP-ENV:Envelope>`
-	msg, _ := messages.ParseXml(data)
+	msg, _ := messages.ParseXML([]byte(data))
 	inform := msg.(*messages.Inform)
 	fmt.Println(inform.Manufacturer)
 	fmt.Println(inform.OUI)
-	fmt.Println(inform.SerialNumber)
+	fmt.Println(inform.Sn)
 	fmt.Println(inform.ProductClass)
-	fmt.Println(inform.Id)
+	fmt.Println(inform.ID)
 	fmt.Println(inform.Name)
 	fmt.Println("curTime", inform.CurrentTime)
 

@@ -8,5 +8,5 @@ import (
 
 func TestCreateGetRPCMethods(t *testing.T) {
 	resp := new(messages.GetRPCMethods)
-	fmt.Println(string(resp.CreateXml()))
+	fmt.Println(string(resp.CreateXML()))
 }
