@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/astaxie/beego/session"
-	log "go-acs/acs/log"
-	"go-acs/acs/models/messages"
+	log "github.com/it-man-cn/go-acs/acs/log"
+	"github.com/it-man-cn/go-acs/acs/models/messages"
 	"io/ioutil"
 	"net"
 	"net/http"
