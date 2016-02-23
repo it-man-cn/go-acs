@@ -10,7 +10,12 @@ func ParseXML(data []byte) (msg Message, err error) {
 	doc.LoadBytes(data, nil)
 	bodyNode := doc.SelectNode("*", "Body")
 	if bodyNode != nil {
-		name := bodyNode.Children[1].Name.Local
+		var name string
+		if len(bodyNode.Children) > 1 {
+			name = bodyNode.Children[1].Name.Local
+		} else {
+			name = bodyNode.Children[0].Name.Local
+		}
 		switch name {
 		case "Inform":
 			msg = NewInform()
