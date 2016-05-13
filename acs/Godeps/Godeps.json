@@ -9,14 +9,6 @@
 			"Rev": "100b4585853d399f9cbbdca8b5f5da2b50727241"
 		},
 		{
-			"ImportPath": "github.com/garyburd/redigo/internal",
-			"Rev": "836b6e58b3358112c8291565d01c35b8764070d7"
-		},
-		{
-			"ImportPath": "github.com/garyburd/redigo/redis",
-			"Rev": "836b6e58b3358112c8291565d01c35b8764070d7"
-		},
-		{
 			"ImportPath": "github.com/it-man-cn/log4go",
 			"Comment": "go.weekly.2012-02-22-1-g37f8a79",
 			"Rev": "37f8a79ecde9cf3548b82ccc72f233b97e180458"
@@ -28,11 +20,6 @@
 		{
 			"ImportPath": "github.com/streadway/amqp",
 			"Rev": "1aedb1f9e106db5d7403222313a0504a06def5b3"
-		},
-		{
-			"ImportPath": "go-acs/acs/models",
-			"Comment": "v0.0.1-44-g5bee87a",
-			"Rev": "5bee87a2facdf64afdf0c6c64255d637c360a4d1"
 		},
 		{
 			"ImportPath": "go-acs/acs/models/messages",
