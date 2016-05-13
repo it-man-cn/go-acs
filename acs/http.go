@@ -1,16 +1,18 @@
 package main
 
 import (
-	"fmt"
-	"github.com/astaxie/beego/session"
-	log "github.com/it-man-cn/go-acs/acs/log"
-	"github.com/it-man-cn/go-acs/acs/models/messages"
+	log "github.com/it-man-cn/log4go"
+	"go-acs/acs/models/messages"
+	"go-acs/acs/session"
 	"io/ioutil"
 	"net"
 	"net/http"
+	"strconv"
 )
 
-var globalSessions *session.Manager
+var (
+	globalSessions *session.Manager
+)
 
 const (
 	minMaxEnvelopes int    = 1
@@ -29,20 +31,21 @@ func initHTTP(addrs []string) (err error) {
 		server       *http.Server
 		httpServeMux = http.NewServeMux()
 	)
-	globalSessions, _ = session.NewManager("memory", `{"cookieName":"gosessionid","gclifetime":3600}`)
-	go globalSessions.GC()
-	httpServeMux.HandleFunc("/tr069", tr069)
+	globalSessions = session.NewManager()
+
+	httpServeMux.HandleFunc("/ACS/tr069", tr069)
+
 	for _, bind = range addrs {
 		if addr, err = net.ResolveTCPAddr("tcp4", bind); err != nil {
-			log.Error("net.ResolveTCPAddr(\"tcp4\", \"%s\") error(%v)", bind, err)
+			log.Error("net.ResolveTCPAddr(\"tcp4\", \"", bind, "\") error:", err)
 			return
 		}
 		if listener, err = net.ListenTCP("tcp4", addr); err != nil {
-			log.Error("net.ListenTCP(\"tcp4\", \"%s\") error(%v)", bind, err)
+			log.Error("net.ListenTCP(\"tcp4\", \"", bind, "\") error:", err)
 			return
 		}
 		server = &http.Server{Handler: httpServeMux}
-		log.Debug("start http listen: \"%s\"", bind)
+		log.Info("start http listen: \"%s\"", bind)
 		go func() {
 			if err = server.Serve(listener); err != nil {
 				log.Error("server.Serve(\"%s\") error(%v)", bind, err)
@@ -54,51 +57,45 @@ func initHTTP(addrs []string) (err error) {
 }
 
 func tr069(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("tr069")
-	sess, err := globalSessions.SessionStart(w, r)
-	if err != nil {
-		fmt.Println(err)
-	}
-	//defer sess.SessionRelease(w)
-	fmt.Println("sessionId:", sess.SessionID)
 	var requestBody []byte
+	var err error
 	if r.Method == "POST" {
 		// receive posted data
 		requestBody, err = ioutil.ReadAll(r.Body)
 		if err != nil {
-			fmt.Println(nil)
+			log.Warn("tr069 read body error(%v)", err)
 		}
-		//fmt.Println(string(requestBody))
 	}
 
 	var response []byte
-	//var lastInform *messages.Inform
-
 	cpeSentEmptyReq := true
 	var sn string
-	isInform := false
 	if len(requestBody) > 0 {
 		cpeSentEmptyReq = false
 		msg, err := messages.ParseXML(requestBody)
 		if err == nil {
 			switch msg.GetName() {
 			case "Inform":
-				isInform = true
 				curInform := msg.(*messages.Inform)
 				sn = curInform.Sn
-				//sess.Set(attrLastInform, lastInform)
-				sess.Set(attrSN, sn)
+				globalSessions.Put(w, r, sn)
 				//response
 				resp := new(messages.InformResponse)
 				resp.MaxEnvelopes = maxEnvelopes
 				response = resp.CreateXML()
-				//dosomething, update config
-				//TODO
+				if curInform.IsEvent(messages.EventPeriodic) {
+					//TODO
+					//sync device info
+				} else if curInform.IsEvent(messages.EventValueChange) {
+					//TODO
+					//sync config
+				}
 			case "TransferComplete":
 				tc := msg.(*messages.TransferComplete)
-				//do something
 				resp := new(messages.TransferCompleteResponse)
 				resp.ID = tc.ID
+				//TODO
+				//rpc reply
 				response = resp.CreateXML()
 			case "GetRPCMethods":
 				gm := msg.(*messages.GetRPCMethods)
@@ -106,34 +103,97 @@ func tr069(w http.ResponseWriter, r *http.Request) {
 				resp.ID = gm.ID
 				response = resp.CreateXML()
 			default:
-				fmt.Println("rpc reply")
 				//rpc reply
 				//read replyto and send reponse msg to mq
 				//TODO
+				//根据sessionid读取replytTo,corrID，session需要保证replyTo的一致性，不是每条消息都有replyTo
+				session := globalSessions.Get(w, r)
+				if session != nil {
+					//sn := session.SN
+					if len(session.ReplyTo) > 0 {
+						//send rpc reply
+						sendRPCResponse(msg, session.ReplyTo, session.CorrelationID)
+					}
+					//has msg anymore
+					var channel *Channel
+					if channel = DefaultBucket.Channel(session.SN); channel != nil {
+						//read msg
+						var msg *Message
+						var err error
+						if msg, err = channel.SvrProto.Get(); err != nil {
+							// must be empty error
+							err = nil
+							session.ReplyTo = ""
+							session.CorrelationID = ""
+						} else {
+							// just forward the message
+							if Debug {
+								log.Debug("channel msg:", string(msg.Body))
+							}
+							m := FromMessage(*msg)
+							session.ReplyTo = msg.ReplyTo
+							session.CorrelationID = msg.CorrelationID
+							response = m.CreateXML()
+							channel.SvrProto.GetAdv() //读计算器累加
+						}
+					} else {
+						session.ReplyTo = ""
+						session.CorrelationID = ""
+					}
+				}
 
-				//has msg anymore,read from mq
-				//query msg by sn
-				//replyto save in session
-				//TODO
 			}
 		}
 	}
 
-	if !isInform {
-		val := sess.Get(attrSN)
-		if val != nil {
-			sn = val.(string)
+	if cpeSentEmptyReq {
+		session := globalSessions.Get(w, r)
+		if session != nil {
+			//根据sn取消息
+			var channel *Channel
+			if channel = DefaultBucket.Channel(session.SN); channel != nil {
+				//read msg
+				var msg *Message
+				var err error
+				if msg, err = channel.SvrProto.Get(); err != nil {
+					// must be empty error
+					err = nil
+					session.ReplyTo = ""
+					session.CorrelationID = ""
+				} else {
+					// just forward the message
+					if Debug {
+						log.Debug("channel msg:", string(msg.Body))
+					}
+					m := FromMessage(*msg)
+					session.ReplyTo = msg.ReplyTo
+					session.CorrelationID = msg.CorrelationID
+					response = m.CreateXML()
+					channel.SvrProto.GetAdv() //读计算器累加
+				}
+			} else {
+				session.ReplyTo = ""
+				session.CorrelationID = ""
+			}
 		}
 	}
-	//read tr069 job
-	fmt.Println("sn:", sn)
-	if len(sn) > 0 && cpeSentEmptyReq {
-		//query msg by sn
-		fmt.Println("query msg")
-		//replyto save in session
-	}
-
 	//write response
 	w.Header().Add("Content-Type", "application/xml; charset=utf-8")
+	w.Header().Set("Content-Length", strconv.Itoa(len(response)))
 	w.Write(response)
+}
+
+func sendRPCResponse(msg messages.Message, replyTo, corrID string) error {
+	props := MessageProperties{
+		CorrelationID:   corrID,
+		ReplyTo:         replyTo,
+		ContentEncoding: "UTF-8",
+		ContentType:     "application/json",
+	}
+	reply, err := CreateMessage(msg, props)
+	if err != nil {
+		return err
+	}
+	Reply(reply, replyTo)
+	return nil
 }

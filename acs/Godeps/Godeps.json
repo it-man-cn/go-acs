@@ -4,48 +4,50 @@
 	"GodepVersion": "v60",
 	"Deps": [
 		{
-			"ImportPath": "github.com/astaxie/beego",
-			"Comment": "v1.5.0",
-			"Rev": "f7f390dfecc5d2c37e5457e9789b8962c78a4403"
+			"ImportPath": "github.com/Terry-Mao/goconf",
+			"Comment": "v1.0-4-g100b458",
+			"Rev": "100b4585853d399f9cbbdca8b5f5da2b50727241"
 		},
 		{
-			"ImportPath": "github.com/astaxie/beego/config",
-			"Comment": "v1.5.0",
-			"Rev": "f7f390dfecc5d2c37e5457e9789b8962c78a4403"
+			"ImportPath": "github.com/garyburd/redigo/internal",
+			"Rev": "836b6e58b3358112c8291565d01c35b8764070d7"
 		},
 		{
-			"ImportPath": "github.com/astaxie/beego/context",
-			"Comment": "v1.5.0",
-			"Rev": "f7f390dfecc5d2c37e5457e9789b8962c78a4403"
+			"ImportPath": "github.com/garyburd/redigo/redis",
+			"Rev": "836b6e58b3358112c8291565d01c35b8764070d7"
 		},
 		{
-			"ImportPath": "github.com/astaxie/beego/grace",
-			"Comment": "v1.5.0",
-			"Rev": "f7f390dfecc5d2c37e5457e9789b8962c78a4403"
-		},
-		{
-			"ImportPath": "github.com/astaxie/beego/logs",
-			"Comment": "v1.5.0",
-			"Rev": "f7f390dfecc5d2c37e5457e9789b8962c78a4403"
-		},
-		{
-			"ImportPath": "github.com/astaxie/beego/session",
-			"Comment": "v1.5.0",
-			"Rev": "f7f390dfecc5d2c37e5457e9789b8962c78a4403"
-		},
-		{
-			"ImportPath": "github.com/astaxie/beego/toolbox",
-			"Comment": "v1.5.0",
-			"Rev": "f7f390dfecc5d2c37e5457e9789b8962c78a4403"
-		},
-		{
-			"ImportPath": "github.com/astaxie/beego/utils",
-			"Comment": "v1.5.0",
-			"Rev": "f7f390dfecc5d2c37e5457e9789b8962c78a4403"
+			"ImportPath": "github.com/it-man-cn/log4go",
+			"Comment": "go.weekly.2012-02-22-1-g37f8a79",
+			"Rev": "37f8a79ecde9cf3548b82ccc72f233b97e180458"
 		},
 		{
 			"ImportPath": "github.com/jteeuwen/go-pkg-xmlx",
 			"Rev": "76f54ee73233b171ca9ee82ef837a1fc4d3809c0"
+		},
+		{
+			"ImportPath": "github.com/streadway/amqp",
+			"Rev": "1aedb1f9e106db5d7403222313a0504a06def5b3"
+		},
+		{
+			"ImportPath": "go-acs/acs/models",
+			"Comment": "v0.0.1-44-g5bee87a",
+			"Rev": "5bee87a2facdf64afdf0c6c64255d637c360a4d1"
+		},
+		{
+			"ImportPath": "go-acs/acs/models/messages",
+			"Comment": "v0.0.1-44-g5bee87a",
+			"Rev": "5bee87a2facdf64afdf0c6c64255d637c360a4d1"
+		},
+		{
+			"ImportPath": "go-acs/acs/session",
+			"Comment": "v0.0.1-44-g5bee87a",
+			"Rev": "5bee87a2facdf64afdf0c6c64255d637c360a4d1"
+		},
+		{
+			"ImportPath": "go-acs/libs/perf",
+			"Comment": "v0.0.1-44-g5bee87a",
+			"Rev": "5bee87a2facdf64afdf0c6c64255d637c360a4d1"
 		}
 	]
 }

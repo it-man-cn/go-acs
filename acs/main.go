@@ -1,41 +1,42 @@
 package main
 
 import (
-	//"github.com/astaxie/beego"
-	//_ "go-acs/acs/routers"
+	"flag"
+	log "github.com/it-man-cn/log4go"
+	"go-acs/libs/perf"
+	"runtime"
+)
 
-	"fmt"
-	"os"
-	"os/signal"
-	"syscall"
+var (
+	//DefaultBucket bucket
+	DefaultBucket *Bucket
+	Debug         bool
+	//DefaultMsgQueue *MsgQueue
 )
 
 func main() {
-
-	//beego.Run()
-
-	addrs := []string{":10090"}
-	initHTTP(addrs)
-
-	// block until a signal is received.
-	InitSignal()
-
-}
-
-// InitSignal register signals handler.
-func InitSignal() {
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT, syscall.SIGSTOP)
-	for {
-		s := <-c
-		fmt.Printf(" get a signal %s", s.String())
-		switch s {
-		case syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGSTOP, syscall.SIGINT:
-			return
-		case syscall.SIGHUP:
-			//reload()
-		default:
-			return
-		}
+	flag.Parse()
+	if err := InitConfig(); err != nil {
+		panic(err)
 	}
+	Debug = Conf.Debug
+	runtime.GOMAXPROCS(Conf.MaxProc)
+	log.LoadConfiguration(Conf.Log)
+	defer log.Close()
+	//Pprof listen
+	perf.Init(Conf.PprofBind)
+
+	DefaultBucket = NewBucket(BucketOptions{
+		ChannelSize: Conf.ChannelSize,
+	})
+	//DefaultMsgQueue = NewMsgQueue()
+	NewMsgQueue()
+	if err := initHTTP(Conf.HTTPBind); err != nil {
+		panic(err)
+	}
+	// block until a signal is received.
+	//InitSignal()
+	forever := make(chan bool)
+	<-forever
+
 }

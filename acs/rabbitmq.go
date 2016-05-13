@@ -1,12 +1,9 @@
-package models
+package main
 
 import (
-	"github.com/astaxie/beego"
+	log "github.com/it-man-cn/log4go"
 	"github.com/streadway/amqp"
-	log "go-acs/acs/log"
 )
-
-var amqpURI = beego.AppConfig.String("amqpurl")
 
 //RabbitMQ conn info
 type RabbitMQ struct {
@@ -15,25 +12,11 @@ type RabbitMQ struct {
 	done    chan error
 }
 
-//MessageProperties amqp msg property
-type MessageProperties struct {
-	Headers         amqp.Table
-	CorrelationID   string
-	ReplyTo         string
-	ContentEncoding string
-	ContentType     string
-	Expiration      string
-}
-
-//Message amqp msg
-type Message struct {
-	MessageProperties
-	Body []byte
-}
+var rabbit RabbitMQ
 
 //Connect create a new amqp conn
 func (r *RabbitMQ) Connect() (err error) {
-	r.conn, err = amqp.Dial(amqpURI)
+	r.conn, err = amqp.Dial(Conf.AMQPUrl)
 	if err != nil {
 		log.Info("[amqp] connect error: %s\n", err)
 		return err
@@ -60,7 +43,7 @@ func (r *RabbitMQ) publish(exchange, key string, msg Message) (err error) {
 		},
 	)
 	if err != nil {
-		log.Info("[amqp] publish message error: %s\n", err)
+		log.Info("[amqp] publish message error: %s", err)
 		return err
 	}
 	return nil
@@ -77,7 +60,7 @@ func (r *RabbitMQ) publishText(exchange, key, text string) (err error) {
 		},
 	)
 	if err != nil {
-		log.Info("[amqp] publish message error: %s\n", err)
+		log.Info("[amqp] publish message error: %s", err)
 		return err
 	}
 	return nil
@@ -87,7 +70,7 @@ func (r *RabbitMQ) publishText(exchange, key, text string) (err error) {
 func (r *RabbitMQ) consumeQueue(queue string) (message Message, err error) {
 	deliver, ok, err := r.channel.Get(queue, true)
 	if err != nil {
-		log.Info("[amqp] consume queue error: %s\n", err)
+		log.Info("[amqp] consume queue error: %s", err)
 		return message, err
 	}
 	if ok {
@@ -109,7 +92,7 @@ func (r *RabbitMQ) consumeQueue(queue string) (message Message, err error) {
 func (r *RabbitMQ) Close() (err error) {
 	err = r.conn.Close()
 	if err != nil {
-		log.Info("[amqp] close error: %s\n", err)
+		log.Info("[amqp] close error: %s", err)
 		return err
 	}
 	return nil
@@ -119,13 +102,13 @@ func (r *RabbitMQ) Close() (err error) {
 func ReciveMsg(queue string) (message Message) {
 	rabbit := new(RabbitMQ)
 	if err := rabbit.Connect(); err != nil {
-		log.Info("[amqp] connect error: %s\n", err)
+		log.Info("[amqp] connect error: %s", err)
 		return message
 	}
 	defer rabbit.Close()
 	msg, err := rabbit.consumeQueue(queue)
 	if err != nil {
-		log.Info("[amqp] get error: %s\n", err)
+		log.Info("[amqp] get error: %s", err)
 		return message
 	}
 	return msg
@@ -135,13 +118,13 @@ func ReciveMsg(queue string) (message Message) {
 func Reply(msg Message, sendTo string) (err error) {
 	rabbit := new(RabbitMQ)
 	if err = rabbit.Connect(); err != nil {
-		log.Info("[amqp] connect error: %s\n", err)
+		log.Info("[amqp] connect error: %s", err)
 		return
 	}
 	defer rabbit.Close()
 	err = rabbit.publish("", sendTo, msg)
 	if err != nil {
-		log.Info("[amqp] send error: %s\n", err)
+		log.Info("[amqp] send error: %s", err)
 		return
 	}
 	return
@@ -151,7 +134,7 @@ func Reply(msg Message, sendTo string) (err error) {
 func SendMsg(msg Message, sendTo string) (err error) {
 	rabbit := new(RabbitMQ)
 	if err = rabbit.Connect(); err != nil {
-		log.Info("[amqp] connect error: %s\n", err)
+		log.Info("[amqp] connect error: %s", err)
 		return
 	}
 	defer rabbit.Close()
@@ -164,12 +147,12 @@ func SendMsg(msg Message, sendTo string) (err error) {
 		amqp.Table{"x-message-ttl": int32(300000)}, // arguments in ms
 	)
 	if err != nil {
-		log.Info("[amqp] QueueDeclare error: %s\n", err)
+		log.Info("[amqp] QueueDeclare error: %s", err)
 		return
 	}
 	err = rabbit.publish("", sendTo, msg)
 	if err != nil {
-		log.Info("[amqp] send error: %s\n", err)
+		log.Info("[amqp] send error: %s", err)
 		return
 	}
 	return
@@ -179,14 +162,48 @@ func SendMsg(msg Message, sendTo string) (err error) {
 func SendText(text, sendTo string) (err error) {
 	rabbit := new(RabbitMQ)
 	if err := rabbit.Connect(); err != nil {
-		log.Info("[amqp] connect error: %s\n", err)
+		log.Info("[amqp] connect error: %s", err)
 		return err
 	}
 	defer rabbit.Close()
 	err = rabbit.publishText("", sendTo, text)
 	if err != nil {
-		log.Info("[amqp] send error: %s\n", err)
+		log.Info("[amqp] send error: %s", err)
 		return err
 	}
 	return nil
+}
+
+//Kick kick stun
+func Kick(sn string) {
+	_, err := rabbit.channel.QueueDeclare(
+		"stun_queue", // name
+		false,        // durable
+		false,        // delete when unused
+		false,        // exclusive
+		false,        // no-wait
+		nil,
+		//amqp.Table{"x-message-ttl": int32(300000)}, // arguments in ms
+	)
+
+	if err != nil {
+		log.Info("[amqp] QueueDeclare error: %s", err)
+		return
+	}
+	//stun kick
+	props := MessageProperties{
+		CorrelationID:   "",
+		ReplyTo:         "",
+		ContentEncoding: "UTF-8",
+		ContentType:     "text/plain",
+	}
+
+	kickmsg := Message{MessageProperties: props, Body: []byte(sn)}
+
+	err = rabbit.publish("", "stun_queue", kickmsg)
+	if err != nil {
+		log.Info("[amqp] send error: %s", err)
+		return
+	}
+	return
 }

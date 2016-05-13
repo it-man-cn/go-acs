@@ -1,4 +1,4 @@
-package models
+package main
 
 import (
 	"encoding/json"
@@ -11,6 +11,22 @@ import (
 const (
 	defaultClassIDFieldName string = "__TypeId__"
 )
+
+//MessageProperties amqp msg property
+type MessageProperties struct {
+	Headers         amqp.Table
+	CorrelationID   string
+	ReplyTo         string
+	ContentEncoding string
+	ContentType     string
+	Expiration      string
+}
+
+//Message amqp msg
+type Message struct {
+	MessageProperties
+	Body []byte
+}
 
 var idClassMapping map[string]reflect.Type
 var classIDMapping map[reflect.Type]string
@@ -29,7 +45,8 @@ func init() {
 		"GetRPCMethodsResponse":      reflect.TypeOf(messages.GetRPCMethodsResponse{}),
 		"Inform":                     reflect.TypeOf(messages.Inform{}),
 		"InformResponse":             reflect.TypeOf(messages.InformResponse{}),
-		"OnlineInform":               reflect.TypeOf(messages.OnlineInform{}),
+		"UpdateConfigLog":            reflect.TypeOf(messages.UpdateConfigLog{}),
+		"SoftwareChange":             reflect.TypeOf(messages.SoftwareChange{}),
 		"ValueChange":                reflect.TypeOf(messages.ValueChange{}),
 	}
 
@@ -46,7 +63,8 @@ func init() {
 		reflect.TypeOf(&messages.GetRPCMethodsResponse{}):      "GetRPCMethodsResponse",
 		reflect.TypeOf(&messages.Inform{}):                     "Inform",
 		reflect.TypeOf(&messages.InformResponse{}):             "InformResponse",
-		reflect.TypeOf(&messages.OnlineInform{}):               "OnlineInform",
+		reflect.TypeOf(&messages.UpdateConfigLog{}):            "UpdateConfigLog",
+		reflect.TypeOf(&messages.SoftwareChange{}):             "SoftwareChange",
 		reflect.TypeOf(&messages.ValueChange{}):                "ValueChange",
 	}
 }
