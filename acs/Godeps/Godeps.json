@@ -1,0 +1,51 @@
+{
+	"ImportPath": "github.com/it-man-cn/go-acs/acs",
+	"GoVersion": "go1.5",
+	"GodepVersion": "v60",
+	"Deps": [
+		{
+			"ImportPath": "github.com/astaxie/beego",
+			"Comment": "v1.5.0",
+			"Rev": "f7f390dfecc5d2c37e5457e9789b8962c78a4403"
+		},
+		{
+			"ImportPath": "github.com/astaxie/beego/config",
+			"Comment": "v1.5.0",
+			"Rev": "f7f390dfecc5d2c37e5457e9789b8962c78a4403"
+		},
+		{
+			"ImportPath": "github.com/astaxie/beego/context",
+			"Comment": "v1.5.0",
+			"Rev": "f7f390dfecc5d2c37e5457e9789b8962c78a4403"
+		},
+		{
+			"ImportPath": "github.com/astaxie/beego/grace",
+			"Comment": "v1.5.0",
+			"Rev": "f7f390dfecc5d2c37e5457e9789b8962c78a4403"
+		},
+		{
+			"ImportPath": "github.com/astaxie/beego/logs",
+			"Comment": "v1.5.0",
+			"Rev": "f7f390dfecc5d2c37e5457e9789b8962c78a4403"
+		},
+		{
+			"ImportPath": "github.com/astaxie/beego/session",
+			"Comment": "v1.5.0",
+			"Rev": "f7f390dfecc5d2c37e5457e9789b8962c78a4403"
+		},
+		{
+			"ImportPath": "github.com/astaxie/beego/toolbox",
+			"Comment": "v1.5.0",
+			"Rev": "f7f390dfecc5d2c37e5457e9789b8962c78a4403"
+		},
+		{
+			"ImportPath": "github.com/astaxie/beego/utils",
+			"Comment": "v1.5.0",
+			"Rev": "f7f390dfecc5d2c37e5457e9789b8962c78a4403"
+		},
+		{
+			"ImportPath": "github.com/jteeuwen/go-pkg-xmlx",
+			"Rev": "76f54ee73233b171ca9ee82ef837a1fc4d3809c0"
+		}
+	]
+}
