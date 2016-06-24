@@ -33,7 +33,7 @@ func TestParse(t *testing.T) {
               <ParameterList SOAP-ENC:arrayType="cwmp:ParameterValueStruct[11]">
                   <ParameterValueStruct>
                       <Name xsi:type="string">InternetGatewayDevice.DeviceInfo.ProvisioningCode</Name>
-                      <Value xsi:type="string">D915W</Value>
+                      <Value xsi:type="string">it-man-cn</Value>
                   </ParameterValueStruct>
                   <ParameterValueStruct>
                       <Name xsi:type="string">InternetGatewayDevice.ManagementServer.URL</Name>
@@ -65,7 +65,7 @@ func TestParse(t *testing.T) {
                   </ParameterValueStruct>
                   <ParameterValueStruct>
                       <Name xsi:type="string">InternetGatewayDevice.DeviceInfo.SoftwareVersion</Name>
-                      <Value xsi:type="string">nvD915wv2.2.0-150120</Value>
+                      <Value xsi:type="string">it-man-cn-150120</Value>
                   </ParameterValueStruct>
                   <ParameterValueStruct>
                       <Name xsi:type="string">InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress</Name>
